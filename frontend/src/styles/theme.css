@@ -1,0 +1,219 @@
+:root{
+  /* Figma: background */
+  --bg: linear-gradient(172.84deg, #FFB88C 2.29%, #DE6262 97.71%);
+
+  /* Figma text */
+  --text: #1E1E1E;
+  --placeholder: #B3B3B3;
+
+  /* Card */
+  --card: #FFFFFF;
+  --border: rgba(30,30,30,.14);
+  --shadow: 0 12px 28px rgba(0,0,0,.14);
+  --radius: 16px;
+
+  /* Header button */
+  --cta-bg: #2C2C2C;
+  --cta-text: #FFFFFF;
+
+  /* Accent (Figma orange) */
+  --accent: #E27F29;
+
+  /* Layout sizes from Figma */
+  --header-h: 72px;
+
+  /* Register inner content width */
+  --content-w: 592px;
+  /* card width = content + padding*2 => 592 + 32*2 = 656 */
+  --card-pad: 32px;
+  --card-w: calc(var(--content-w) + (var(--card-pad) * 2));
+}
+
+html, body, #root { height: 100%; }
+body{
+  margin:0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--text);
+}
+
+/* PAGE */
+.ds-page{
+  min-height: 100vh;
+  background: var(--bg);
+  display:flex;
+  flex-direction:column;
+}
+
+/* HEADER (Figma: height 72) */
+.ds-header{
+  height: var(--header-h);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding: 0 40px;
+}
+
+.ds-brand{
+  font-weight:700;
+  font-size: 28px; /* proche "headline large" */
+  color: #000;
+}
+
+.ds-cta{
+  height: 40px;              /* Figma: 40 */
+  min-width: 123px;          /* Figma: 123 */
+  padding: 0 14px;
+  border-radius: 10px;
+  background: var(--cta-bg);
+  color: var(--cta-text);
+  border: 0;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* MAIN CENTER */
+.ds-main{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 0 24px;
+}
+
+/* CARD */
+.ds-card{
+  width: var(--card-w);                  /* 656px */
+  max-width: calc(100vw - 48px);
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--card-pad);
+}
+
+/* TITLE (Figma: 28 / 40) */
+.ds-title{
+  margin: 0 0 20px 0;
+  font-size: 28px;
+  line-height: 40px;
+  font-weight: 700;
+  text-align:center;
+  color: #000;
+}
+
+/* FIELDS */
+.ds-field{ margin-bottom: 16px; }
+
+.ds-label{
+  display:block;
+  margin-bottom: 8px;
+  font-size: 16px;           /* Figma label 16 */
+  line-height: 24px;         /* Figma label 24 */
+  font-weight: 400;
+  color: var(--text);
+}
+
+.ds-input{
+  width:100%;
+  box-sizing:border-box;
+  height: 40px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,.14);
+  outline: none;
+  font-size: 14px;
+  color: var(--text);
+  background: #fff;
+}
+
+.ds-input::placeholder{
+  color: var(--placeholder); /* Figma placeholder */
+}
+
+.ds-input:focus{
+  border-color: rgba(226,127,41,.65);
+  box-shadow: 0 0 0 3px rgba(226,127,41,.18);
+}
+
+/* LINK / TERTIARY BUTTON (Figma orange #E27F29, font 16) */
+.ds-link{
+  display:block;
+  text-align:center;
+  margin: 16px 0 16px;
+  font-size: 16px;
+  line-height: 16px;
+  font-weight: 400;
+  color: var(--accent);
+  text-decoration:none;
+  cursor:pointer;
+}
+
+/* PRIMARY CTA (bottom button on mock) */
+.ds-primary{
+  width: 100%;
+  height: 40px;                         /* Figma: 40 */
+  border-radius: 10px;
+  border: 1px solid rgba(226,127,41,.65);
+  background: rgba(226,127,41,.12);     /* léger “peach” */
+  color: var(--accent);
+  font-size: 16px;
+  line-height: 16px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.ds-primary:hover{
+  background: rgba(226,127,41,.18);
+}
+
+/* ERROR */
+.ds-error{
+  margin-top: 10px;
+  color: #7a1e1a;
+  font-size: 13px;
+  text-align:center;
+}
+
+/* FOOTER (bottom-left like mock) */
+.ds-footer{
+  padding: 18px 40px;
+  color: rgba(255,255,255,.92);
+  font-size: 12px;
+}
+
+/* LANDING */
+.ds-landing{
+  text-align:center;
+  max-width: 980px;
+  padding: 0 12px;
+}
+
+.ds-landing h1{
+  margin: 0;
+  font-size: 96px;
+  line-height: 1.05;
+  font-weight: 900;
+  color: #000;
+}
+
+.ds-landing p{
+  margin-top: 18px;
+  font-size: 36px;
+  color: rgba(0,0,0,.65);
+  font-style: italic;
+}
+
+/* MOBILE */
+@media (max-width: 520px){
+  .ds-header{ padding: 0 18px; }
+  .ds-brand{ font-size: 22px; }
+
+  .ds-card{
+    width: 100%;
+    padding: 22px 18px;
+  }
+
+  .ds-title{ font-size: 22px; line-height: 28px; }
+
+  .ds-landing h1{ font-size: 56px; }
+  .ds-landing p{ font-size: 20px; }
+}

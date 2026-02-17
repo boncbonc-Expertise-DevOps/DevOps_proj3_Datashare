@@ -1,38 +1,144 @@
+# DataShare -- MVP Prototype
+
+Prototype d'une plateforme sécurisée de transfert de fichiers.
+
+Ce projet est structuré en **monorepo** contenant :
+
+-   `backend/` → API NestJS
+-   `frontend/` → Application React (Vite)
+-   PostgreSQL exécuté via Docker
+
+------------------------------------------------------------------------
+
+## 🏗 Stack technique
+
 ### Backend
-## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
-
-```bash
-$ npm install
-```
-
-## Compile and run the project
-
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
+-   NestJS
+-   node-postgres (pg)
+-   JWT (authentification)
+-   PostgreSQL
 
 ### Frontend
-## Description
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+-   React
+-   Vite
+-   Fetch API
 
-## Project setup
+### Base de données
 
-```bash
-$ npm install
+-   PostgreSQL 16
+-   Exécutée via Docker
+
+------------------------------------------------------------------------
+
+## 📁 Structure du projet
+
+    DevOps_proj3_Datashare/
+    │
+    ├── backend/
+    │   ├── src/
+    │   ├── package.json
+    │   └── ...
+    │
+    ├── frontend/
+    │   ├── src/
+    │   ├── package.json
+    │   └── ...
+    │
+    └── README.md
+
+------------------------------------------------------------------------
+
+## 🚀 Installation
+
+### ✅ Prérequis
+
+-   Node.js ≥ 18
+-   npm
+-   Docker
+
+------------------------------------------------------------------------
+
+## 🐘 Base de données (PostgreSQL via Docker)
+
+### Lancer PostgreSQL
+
+``` bash
+docker run --name datashare-db \
+  -e POSTGRES_USER=datashare \
+  -e POSTGRES_PASSWORD=datashare \
+  -e POSTGRES_DB=datashare \
+  -p 5432:5432 \
+  -d postgres:16
 ```
 
-## Compile and run the project
+### Vérifier que le conteneur tourne
 
-```bash
-# development
-$ npm run dev
+``` bash
+docker ps
+```
 
+------------------------------------------------------------------------
+
+## 🔧 Backend -- NestJS
+
+### Installation
+
+``` bash
+cd backend
+npm install
+```
+
+### Configuration
+
+Créer un fichier `.env` dans `backend/` :
+
+    DB_HOST=localhost
+    DB_PORT=5432
+    DB_USER=datashare
+    DB_PASSWORD=datashare
+    DB_NAME=datashare
+
+    JWT_SECRET=CleSuperSecretAchanger
+
+### Lancer en mode développement
+
+``` bash
+npm run start:dev
+```
+
+Backend disponible sur :
+
+    http://localhost:3000
+
+------------------------------------------------------------------------
+
+## ⚛️ Frontend -- React (Vite)
+
+### Installation
+
+``` bash
+cd frontend
+npm install
+```
+
+### Lancer en mode développement
+
+``` bash
+npm run dev
+```
+
+Frontend disponible sur :
+
+    http://localhost:5173
+
+------------------------------------------------------------------------
+
+## 🔗 Communication Frontend / Backend
+
+Le frontend communique avec le backend via :
+
+    /api → http://localhost:3000
+
+(Proxy configuré dans `vite.config.ts`)

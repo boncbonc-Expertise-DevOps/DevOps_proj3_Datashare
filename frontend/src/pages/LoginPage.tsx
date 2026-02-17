@@ -1,64 +1,79 @@
 import { useState } from "react";
+import { Layout } from "../components/Layout";
 import { login } from "../api";
 
 export function LoginPage({
+  goRegister,
   onLoggedIn,
-  onGoRegister,
 }: {
+  goRegister: () => void;
   onLoggedIn: () => void;
-  onGoRegister: () => void;
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function submit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setMsg(null);
+    setError(null);
     setLoading(true);
     try {
       await login({ email, password });
       onLoggedIn();
     } catch (err: any) {
-      setMsg(err.message || "Erreur login");
+      setError(err.message || "Erreur login");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div style={{ maxWidth: 420, margin: "40px auto", fontFamily: "sans-serif" }}>
-      <h2>Connexion</h2>
-      <form onSubmit={submit}>
-        <label>Email</label>
-        <input
-          style={{ width: "100%", padding: 10, margin: "6px 0 12px" }}
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+    <Layout ctaLabel="Se connecter">
+      <form className="ds-card" onSubmit={onSubmit}>
+        <h1 className="ds-title">Connexion</h1>
 
-        <label>Mot de passe</label>
-        <input
-          style={{ width: "100%", padding: 10, margin: "6px 0 12px" }}
-          type="password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div className="ds-field">
+          <label className="ds-label">Email</label>
+          <input
+            className="ds-input"
+            placeholder="Saisissez votre email..."
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
 
-        <button disabled={loading} style={{ padding: "10px 14px" }}>
-          {loading ? "Connexion..." : "Se connecter"}
-        </button>
+        <div className="ds-field">
+          <label className="ds-label">Mot de passe</label>
+          <input
+            className="ds-input"
+            placeholder="Saisissez votre mot de passe..."
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
 
-        <button type="button" onClick={onGoRegister} style={{ padding: "10px 14px", marginLeft: 10 }}>
+        <a
+          className="ds-link"
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            goRegister();
+          }}
+        >
           Créer un compte
-        </button>
-      </form>
+        </a>
 
-      {msg && <p style={{ marginTop: 14 }}>{msg}</p>}
-    </div>
+        <button className="ds-primary" type="submit" disabled={loading}>
+          {loading ? "Connexion..." : "Connexion"}
+        </button>
+
+        {error && <div className="ds-error">{error}</div>}
+      </form>
+    </Layout>
   );
 }

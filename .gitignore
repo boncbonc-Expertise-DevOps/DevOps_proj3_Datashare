@@ -1,0 +1,85 @@
+# ======================================================
+# ROOT - Monorepo NestJS + React (Vite) + Docker
+# ======================================================
+
+# ----------------------
+# Node (backend + frontend)
+# ----------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ----------------------
+# Builds
+# ----------------------
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# ----------------------
+# Environment files (IMPORTANT)
+# ----------------------
+.env
+.env.*
+backend/.env
+frontend/.env
+
+# ----------------------
+# Logs
+# ----------------------
+logs/
+*.log
+
+# ----------------------
+# OS files
+# ----------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------
+# IDE / Editors
+# ----------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ----------------------
+# Docker
+# ----------------------
+postgres-data/
+docker-data/
+
+# ----------------------
+# NestJS specific
+# ----------------------
+backend/dist/
+backend/node_modules/
+
+# ----------------------
+# React / Vite specific
+# ----------------------
+frontend/dist/
+frontend/node_modules/
+frontend/.vite/
+
+# ----------------------
+# Testing
+# ----------------------
+coverage/
+
+# ----------------------
+# Temporary
+# ----------------------
+tmp/
+temp/
+.cache/
+
+# ----------------------
+# Optional: Ignore lock files (if team decision)
+# ----------------------
+# package-lock.json
+# yarn.lock
