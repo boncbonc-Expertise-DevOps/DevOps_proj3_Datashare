@@ -29,7 +29,7 @@ export function LoginPage({
   }
 
   return (
-    <Layout ctaLabel="Se connecter">
+    <Layout ctaLabel="Créer un compte" onCtaClick={goRegister}>
       <form className="ds-card" onSubmit={onSubmit}>
         <h1 className="ds-title">Connexion</h1>
 
