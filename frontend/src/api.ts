@@ -7,6 +7,24 @@ export type LoginResponse = {
   user: { id: number | string; email: string };
 };
 
+export type Me = { id: number; email: string };
+
+export type FileItem = {
+  id: string | number;
+  originalName: string;
+  sizeBytes: number;
+  expiresAt: string;
+  isProtected: boolean;
+  status: "ACTIVE" | "EXPIRED";
+};
+
+export type FilesListResponse = {
+  items: FileItem[];
+  page?: number;
+  pageSize?: number;
+  total?: number;
+};
+
 export function setToken(token: string | null) {
   if (token) localStorage.setItem("accessToken", token);
   else localStorage.removeItem("accessToken");
@@ -50,6 +68,43 @@ export async function login(data: LoginRequest) {
   setToken(r.accessToken);
   return r;
 }
+
+// --- small helper ---
+async function apiFetch<T>(url: string, init: RequestInit = {}): Promise<T> {
+  const token = getToken();
+  const headers = new Headers(init.headers || {});
+  headers.set("Content-Type", headers.get("Content-Type") || "application/json");
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
+  const res = await fetch(url, { ...init, headers });
+
+  if (!res.ok) {
+    let msg = `HTTP ${res.status}`;
+    try {
+      const data = await res.json();
+      msg = data?.message || msg;
+    } catch {}
+    throw new Error(msg);
+  }
+
+  // 204 no-content
+  if (res.status === 204) return undefined as T;
+  return res.json() as Promise<T>;
+}
+
+// --- endpoints ---
+export function apiMe() {
+  return apiFetch<Me>("/api/auth/me", { method: "GET" });
+}
+
+export function apiFilesList(status: "all" | "active" | "expired" = "all") {
+  const qs = new URLSearchParams();
+  qs.set("status", status);
+  return apiFetch<FilesListResponse>(`/api/files?${qs.toString()}`, {
+    method: "GET",
+  });
+}
+
 
 export function logout() {
   setToken(null);

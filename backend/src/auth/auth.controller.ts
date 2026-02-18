@@ -32,9 +32,9 @@ export class AuthController {
     return { accessToken, user };
   }
 
-  @Get("serge")
+  @Get("me")
   @UseGuards(JwtAuthGuard)
-    serge(@Req() req) {
+    me(@Req() req) {
     return req.user;
   }
 

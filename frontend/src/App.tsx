@@ -1,26 +1,35 @@
 import { useEffect, useState } from "react";
-import { getToken, logout } from "./api";
+import { apiMe, getToken, logout, type Me } from "./api";
 
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { MySpacePage } from "./pages/MySpacePage";
 
-type View = "landing" | "login" | "register" | "home";
+type View = "landing" | "login" | "register" | "myspace";
 
 export default function App() {
   const [view, setView] = useState<View>("landing");
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [me, setMe] = useState<Me | null>(null);
 
+  // Au démarrage : si token déjà présent, on essaie /me
   useEffect(() => {
     const token = getToken();
-    if (token) {
-      // si tu veux afficher l'email, il faudrait le décoder ou appeler /me
-      setView("home");
-    }
+    if (!token) return;
+
+    apiMe()
+      .then((m) => {
+        setMe(m);
+        setView("myspace");
+      })
+      .catch(() => {
+        logout();
+        setView("landing");
+      });
   }, []);
 
   function handleLogout() {
     logout();
-    setUserEmail(null);
+    setMe(null);
     setView("landing");
   }
 
@@ -35,7 +44,7 @@ export default function App() {
           </button>
         )}
 
-        {view === "home" && (
+        {view === "myspace" && (
           <button className="ds-cta" onClick={handleLogout}>
             Déconnexion
           </button>
@@ -53,10 +62,10 @@ export default function App() {
         {view === "login" && (
           <LoginPage
             goRegister={() => setView("register")}
-            onLoggedIn={() => {
-              // Optionnel : si tu veux afficher l'email, stocke-le dans localStorage dans api.ts
-              // ou ajoute une route /api/auth/me.
-              setView("home");
+            onLoggedIn={async () => {
+              const m = await apiMe();
+              setMe(m);
+              setView("myspace");
             }}
           />
         )}
@@ -65,12 +74,7 @@ export default function App() {
           <RegisterPage goLogin={() => setView("login")} />
         )}
 
-        {view === "home" && (
-          <div className="ds-card">
-            <h2 className="ds-title">Mon espace</h2>
-            <p>Connecté : {userEmail ?? "(email non chargé)"}</p>
-          </div>
-        )}
+        {view === "myspace" && <MySpacePage />}
       </main>
 
       <footer className="ds-footer">Copyright DataShare® 2025</footer>
