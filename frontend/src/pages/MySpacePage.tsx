@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { apiFilesList } from "../api";
+// import { apiFilesList } from "../api";
 import type { FileItem } from "../api";
 
 export function MySpacePage() {
@@ -7,35 +7,39 @@ export function MySpacePage() {
   const [items, setItems] = useState<FileItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  /* Commenté jusqu'a ce que api/files soit fonctionnel en backend
-  useEffect(() => {
-    let mounted = true;
-
-    (async () => {
-      try {
-        setError(null);
-        const res = await apiFilesList("all");
-        if (!mounted) return;
-        setItems(res.items || []);
-      } catch (e: any) {
-        if (!mounted) return;
-        setError(e?.message || "Erreur chargement fichiers");
-      } finally {
-        if (!mounted) return;
-        setLoading(false);
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-*/
+/* code a remplacer quand GET /api/files sera dispo
 useEffect(() => {
-  // Forcer liste vide
-  setItems([]);
-  setLoading(false);
+  let mounted = true;
+
+  (async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      const res = await apiFilesList("all");
+      if (!mounted) return;
+      setItems(res.items || []);
+    } catch (e: any) {
+      if (!mounted) return;
+      setError(e?.message || "Erreur chargement fichiers");
+    } finally {
+      if (!mounted) return;
+      setLoading(false);
+    }
+  })();
+
+  return () => {
+    mounted = false;
+  };
 }, []);
+*/
+
+
+  useEffect(() => {
+    // TODO: activer quand le backend aura GET /api/files
+    setItems([]); // état vide
+    setLoading(false);
+    setError(null);
+  }, []);
 
   if (loading) {
     return (
@@ -67,9 +71,18 @@ function EmptyState({ onUpload }: { onUpload: () => void }) {
     <div className="ds-myspace-empty">
       <div className="ds-myspace-empty-text">Tu veux partager un fichier ?</div>
 
-      <button className="ds-upload-btn" onClick={onUpload} aria-label="Uploader un fichier">
+      <button
+        className="ds-upload-btn"
+        onClick={onUpload}
+        aria-label="Uploader un fichier"
+      >
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-          <path d="M12 16V5" stroke="white" strokeWidth="2" strokeLinecap="round" />
+          <path
+            d="M12 16V5"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
           <path
             d="M8 9L12 5L16 9"
             stroke="white"
@@ -77,7 +90,12 @@ function EmptyState({ onUpload }: { onUpload: () => void }) {
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-          <path d="M4 19H20" stroke="white" strokeWidth="2" strokeLinecap="round" />
+          <path
+            d="M4 19H20"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
         </svg>
       </button>
     </div>

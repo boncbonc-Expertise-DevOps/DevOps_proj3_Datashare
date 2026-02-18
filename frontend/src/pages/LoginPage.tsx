@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Layout } from "../components/Layout";
 import { login } from "../api";
 
 export function LoginPage({
@@ -29,51 +28,49 @@ export function LoginPage({
   }
 
   return (
-    <Layout ctaLabel="Créer un compte" onCtaClick={goRegister}>
-      <form className="ds-card" onSubmit={onSubmit}>
-        <h1 className="ds-title">Connexion</h1>
+    <form className="ds-card" onSubmit={onSubmit}>
+      <h1 className="ds-title">Connexion</h1>
 
-        <div className="ds-field">
-          <label className="ds-label">Email</label>
-          <input
-            className="ds-input"
-            placeholder="Saisissez votre email..."
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
+      <div className="ds-field">
+        <label className="ds-label">Email</label>
+        <input
+          className="ds-input"
+          placeholder="Saisissez votre email..."
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
 
-        <div className="ds-field">
-          <label className="ds-label">Mot de passe</label>
-          <input
-            className="ds-input"
-            placeholder="Saisissez votre mot de passe..."
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+      <div className="ds-field">
+        <label className="ds-label">Mot de passe</label>
+        <input
+          className="ds-input"
+          placeholder="Saisissez votre mot de passe..."
+          type="password"
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+      </div>
 
-        <a
-          className="ds-link"
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            goRegister();
-          }}
-        >
-          Créer un compte
-        </a>
+      <a
+        className="ds-link"
+        href="#"
+        onClick={(e) => {
+          e.preventDefault();
+          goRegister();
+        }}
+      >
+        Créer un compte
+      </a>
 
-        <button className="ds-primary" type="submit" disabled={loading}>
-          {loading ? "Connexion..." : "Connexion"}
-        </button>
+      <button className="ds-primary" type="submit" disabled={loading}>
+        {loading ? "Connexion..." : "Connexion"}
+      </button>
 
-        {error && <div className="ds-error">{error}</div>}
-      </form>
-    </Layout>
+      {error && <div className="ds-error">{error}</div>}
+    </form>
   );
 }

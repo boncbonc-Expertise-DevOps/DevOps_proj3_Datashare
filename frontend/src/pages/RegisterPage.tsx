@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Layout } from "../components/Layout";
 import { register } from "../api";
 
 export function RegisterPage({ goLogin }: { goLogin: () => void }) {
@@ -21,74 +20,72 @@ export function RegisterPage({ goLogin }: { goLogin: () => void }) {
     setLoading(true);
     try {
       await register({ email, password });
-      goLogin(); // après register -> retour login
+      goLogin(); // redirection vers login
     } catch (err: any) {
-      setError(err.message || "Erreur register");
+      setError(err.message || "Erreur lors de l'inscription");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Layout ctaLabel="Se connecter" onCtaClick={goLogin}>
-      <form className="ds-card" onSubmit={onSubmit}>
-        <h1 className="ds-title">Créer un compte</h1>
+    <form className="ds-card" onSubmit={onSubmit}>
+      <h2 className="ds-title">Créer un compte</h2>
 
-        <div className="ds-field">
-          <label className="ds-label">Email</label>
-          <input
-            className="ds-input"
-            placeholder="Saisissez votre email..."
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
+      <div className="ds-field">
+        <label className="ds-label">Email</label>
+        <input
+          className="ds-input"
+          type="email"
+          placeholder="Saisissez votre email..."
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+      </div>
 
-        <div className="ds-field">
-          <label className="ds-label">Mot de passe</label>
-          <input
-            className="ds-input"
-            placeholder="Saisissez votre mot de passe..."
-            type="password"
-            required
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+      <div className="ds-field">
+        <label className="ds-label">Mot de passe</label>
+        <input
+          className="ds-input"
+          type="password"
+          placeholder="Saisissez votre mot de passe..."
+          required
+          minLength={8}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+      </div>
 
-        <div className="ds-field">
-          <label className="ds-label">Verification du mot de passe</label>
-          <input
-            className="ds-input"
-            placeholder="Saisissez le à nouveau"
-            type="password"
-            required
-            minLength={8}
-            value={password2}
-            onChange={(e) => setPassword2(e.target.value)}
-          />
-        </div>
+      <div className="ds-field">
+        <label className="ds-label">Vérification du mot de passe</label>
+        <input
+          className="ds-input"
+          type="password"
+          placeholder="Saisissez-le à nouveau"
+          required
+          minLength={8}
+          value={password2}
+          onChange={(e) => setPassword2(e.target.value)}
+        />
+      </div>
 
-        <a
-          className="ds-link"
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            goLogin();
-          }}
-        >
-          J'ai déjà un compte
-        </a>
+      <a
+        className="ds-link"
+        href="#"
+        onClick={(e) => {
+          e.preventDefault();
+          goLogin();
+        }}
+      >
+        J'ai déjà un compte
+      </a>
 
-        <button className="ds-primary" type="submit" disabled={loading}>
-          {loading ? "Création..." : "Créer mon compte"}
-        </button>
+      <button className="ds-primary" type="submit" disabled={loading}>
+        {loading ? "Création..." : "Créer mon compte"}
+      </button>
 
-        {error && <div className="ds-error">{error}</div>}
-      </form>
-    </Layout>
+      {error && <div className="ds-error">{error}</div>}
+    </form>
   );
 }
