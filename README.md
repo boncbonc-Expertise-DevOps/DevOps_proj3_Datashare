@@ -10,6 +10,15 @@ Ce projet est structuré en **monorepo** contenant :
 
 ------------------------------------------------------------------------
 
+## 📦 Version
+
+Current version: **v1.0.0**
+Release date: 20-02-2026
+Status: Stable
+Comment: Version initiale correspondant à l'implémentation de US03 (Register) et US04 (Login)
+
+------------------------------------------------------------------------
+
 ## 🏗 Stack technique
 
 ### Backend
