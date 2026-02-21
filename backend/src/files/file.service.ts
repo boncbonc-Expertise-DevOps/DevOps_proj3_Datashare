@@ -38,7 +38,7 @@ export class FileService {
     const storagePath = await this.saveFileToDisk(file);
     const downloadToken = this.generateDownloadToken();
 
-    await this.saveFileMetadata({
+    const saved = await this.saveFileMetadata({
       userId,
       file,
       storagePath,
@@ -50,12 +50,14 @@ export class FileService {
     return {
       status: 'success',
       file: {
+        id: saved.id,
         originalName: file.originalname,
         mimeType: file.mimetype,
         size: file.size,
         storagePath,
         downloadToken,
         expiresAt,
+        createdAt: saved.createdAt,
         passwordProtected: !!passwordHash,
       },
       message: 'Fichier uploadé avec succès.',
@@ -116,14 +118,18 @@ export class FileService {
     downloadToken: string;
     expiresAt: Date;
     passwordHash?: string;
-  }) {
+  }): Promise<{ id: number; createdAt: string }> {
     const { userId, file, storagePath, downloadToken, expiresAt, passwordHash } = params;
     try {
-      await this.db.query(
+      const result = await this.db.query<{ id: string; created_at: string }>(
         `INSERT INTO files (user_id, original_name, mime_type, size_bytes, storage_path, download_token, password_hash, expires_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING id, created_at`,
         [userId, file.originalname, file.mimetype, file.size, storagePath, downloadToken, passwordHash || null, expiresAt]
       );
+
+      const row = result.rows[0];
+      return { id: Number(row.id), createdAt: row.created_at };
     } catch (err) {
       throw new InternalServerErrorException('Erreur lors de l\'enregistrement en base');
     }
