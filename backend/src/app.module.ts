@@ -4,11 +4,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DbModule } from './db/db.module';
 import { AuthModule } from './auth/auth.module';
+import { FileModule } from './files/file.module';
+
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }), // charge .env automatiquement
-    DbModule, AuthModule,
+    DbModule, AuthModule, FileModule,
   ],
   controllers: [AppController],
   providers: [AppService],
