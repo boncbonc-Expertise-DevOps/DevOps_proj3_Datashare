@@ -71,7 +71,7 @@ Connexion et émission d’un JWT.
 
 ## Fichiers (routes protégées JWT)
 
-### POST `/api/files`
+### POST `/api/files/upload`
 
 Upload d’un fichier + options.
 
@@ -82,7 +82,7 @@ Upload d’un fichier + options.
 
   * `file` (binaire, requis)
   * `password` (string, optionnel)
-  * `expiresInDays` (number, optionnel, ex: 1..7)
+  * `expiration_days` (number, optionnel, ex: 1..7)
 
 **Response 201 (JSON)**
 
@@ -102,7 +102,7 @@ Upload d’un fichier + options.
 
 * `401` non authentifié
 * `413` fichier trop volumineux (limite 1 Go)
-* `400` validation (expiresInDays invalide, etc.)
+* `400` validation (expiration_days invalide, etc.)
 
 ---
 
