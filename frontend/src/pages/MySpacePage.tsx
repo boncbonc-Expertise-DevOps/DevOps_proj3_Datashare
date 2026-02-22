@@ -5,7 +5,10 @@ import { apiFilesUpload, type FileItem, type FileUploadResponse } from "../api";
 export function MySpacePage() {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<FileItem[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [pageError, setPageError] = useState<string | null>(null);
+
+  // UI state: on n'a pas encore GET /api/files, donc on gère l'affichage localement.
+  const [view, setView] = useState<"empty" | "upload" | "error">("empty");
 
   // Upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -13,6 +16,7 @@ export function MySpacePage() {
   const [expirationDays, setExpirationDays] = useState<number>(7);
   const [uploading, setUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<FileUploadResponse | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
 /* code a remplacer quand GET /api/files sera dispo
 useEffect(() => {
@@ -45,8 +49,23 @@ useEffect(() => {
     // TODO: activer quand le backend aura GET /api/files
     setItems([]); // état vide
     setLoading(false);
-    setError(null);
+    setPageError(null);
   }, []);
+
+  function resetUploadState() {
+    setSelectedFile(null);
+    setPassword("");
+    setExpirationDays(7);
+    setUploading(false);
+    setUploadResult(null);
+    setUploadError(null);
+  }
+
+  function goBackToMySpace() {
+    setPageError(null);
+    resetUploadState();
+    setView("empty");
+  }
 
   const forbiddenExt = new Set([
     ".exe",
@@ -71,27 +90,31 @@ useEffect(() => {
 
   async function onUploadSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
+    setUploadError(null);
     setUploadResult(null);
 
     if (!selectedFile) {
-      setError("Aucun fichier sélectionné");
+      setUploadError("Aucun fichier sélectionné");
+      setView("error");
       return;
     }
 
     const localValidation = validateSelectedFile(selectedFile);
     if (localValidation) {
-      setError(localValidation);
+      setUploadError(localValidation);
+      setView("error");
       return;
     }
 
     if (expirationDays < 1 || expirationDays > 7) {
-      setError("Date d'expiration : 1 à 7 jours");
+      setUploadError("Date d'expiration : 1 à 7 jours");
+      setView("error");
       return;
     }
 
     if (password && password.length < 6) {
-      setError("Mot de passe trop court (min 6 caractères)");
+      setUploadError("Mot de passe trop court (min 6 caractères)");
+      setView("error");
       return;
     }
 
@@ -104,7 +127,8 @@ useEffect(() => {
       });
       setUploadResult(res);
     } catch (e: any) {
-      setError(e?.message || "Erreur upload");
+      setUploadError(e?.message || "Erreur upload");
+      setView("error");
     } finally {
       setUploading(false);
     }
@@ -119,19 +143,38 @@ useEffect(() => {
     );
   }
 
-  if (error) {
+  if (pageError) {
     return (
-      <div className="ds-card">
-        <h2 className="ds-title">Mon espace</h2>
-        <div className="ds-error">{error}</div>
-      </div>
+      <ErrorState message={pageError} onBack={goBackToMySpace} />
     );
   }
 
+  // Toujours afficher une page d'erreur dédiée (comme les autres pages)
+  if (view === "error") {
+    return (
+      <ErrorState
+        message={uploadError ?? "Erreur"}
+        onBack={goBackToMySpace}
+      />
+    );
+  }
+
+  // Tant que GET /api/files n'existe pas, on force l'expérience "empty" -> "upload".
   if (items.length === 0) {
+    if (view === "empty") {
+      return (
+        <EmptyState
+          onGoUpload={() => {
+            resetUploadState();
+            setView("upload");
+          }}
+        />
+      );
+    }
+
     return (
       <div className="ds-card">
-        <h2 className="ds-title">Mon espace</h2>
+        <h2 className="ds-title">Uploader un fichier</h2>
 
         <form onSubmit={onUploadSubmit} className="mt-4">
           <div className="ds-field">
@@ -143,13 +186,14 @@ useEffect(() => {
               required
               onChange={(e) => {
                 const f = e.target.files?.[0] || null;
-                setError(null);
+                setUploadError(null);
                 setUploadResult(null);
                 setSelectedFile(null);
                 if (!f) return;
                 const msg = validateSelectedFile(f);
                 if (msg) {
-                  setError(msg);
+                  setUploadError(msg);
+                  setView("error");
                   return;
                 }
                 setSelectedFile(f);
@@ -190,8 +234,6 @@ useEffect(() => {
             Taille max 1 Go. Extensions interdites : .exe, .bat, etc. Fichiers sans extension refusés.
           </p>
 
-          {error && <div className="ds-error mt-3">{error}</div>}
-
           {uploadResult && (
             <div className="mt-4">
               <div className="font-semibold">Upload OK</div>
@@ -205,20 +247,74 @@ useEffect(() => {
                   </a>
                 </div>
                 <div>Token : {uploadResult.token}</div>
+                <div>Protégé : {uploadResult.isProtected ? "oui" : "non"}</div>
               </div>
+
+              <button
+                type="button"
+                className="ds-cta mt-4"
+                onClick={() => {
+                  goBackToMySpace();
+                }}
+              >
+                Retour à mon espace
+              </button>
             </div>
           )}
         </form>
-
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold">Mes fichiers</h3>
-          <p className="opacity-80">(Liste à implémenter — GET /api/files)</p>
-        </div>
       </div>
     );
   }
 
   return <FilesList items={items} />;
+}
+
+function EmptyState({ onGoUpload }: { onGoUpload: () => void }) {
+  return (
+    <div className="ds-myspace-empty">
+      <div className="ds-myspace-empty-text">Tu veux partager un fichier ?</div>
+
+      <button
+        className="ds-upload-btn"
+        onClick={onGoUpload}
+        aria-label="Uploader un fichier"
+      >
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path
+            d="M12 16V5"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <path
+            d="M8 9L12 5L16 9"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M4 19H20"
+            stroke="white"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+function ErrorState({ message, onBack }: { message: string; onBack: () => void }) {
+  return (
+    <div className="ds-card">
+      <h2 className="ds-title">Erreur</h2>
+      <div className="ds-error">{message}</div>
+      <button type="button" className="ds-cta mt-4" onClick={onBack}>
+        Retour à mon espace
+      </button>
+    </div>
+  );
 }
 
 function FilesList({ items }: { items: FileItem[] }) {

@@ -12,7 +12,15 @@ Ce projet est structuré en **monorepo** contenant :
 
 ## 📦 Version
 
-Current version: **v1.0.0**
+version: **v1.1.0**
+Release date: 22-02-2026
+Status: Stable
+Comment: Implémentation complète  US01 (Upload) backenbd et frontend
+         avec support complet de github copilot gpt 4.1/5.2 
+
+# History:
+
+version: **v1.0.0**
 Release date: 20-02-2026
 Status: Stable
 Comment: Version initiale correspondant à l'implémentation de US03 (Register) et US04 (Login)
