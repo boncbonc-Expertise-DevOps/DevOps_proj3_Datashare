@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { apiMe, getToken, logout, type Me } from "./api";
+import { apiMe, getToken, logout } from "./api";
 
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { MySpacePage } from "./pages/MySpacePage";
 
 export default function App() {
-  const [me, setMe] = useState<Me | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const isMySpaceRoute = location.pathname.startsWith("/myspace");
 
   // Au démarrage: si token => /myspace sinon rester où on est
   useEffect(() => {
@@ -17,8 +17,7 @@ export default function App() {
     if (!token) return;
 
     apiMe()
-      .then((m) => {
-        setMe(m);
+      .then(() => {
         // si on est sur /login ou /register, on peut rediriger vers /myspace
         if (location.pathname === "/login" || location.pathname === "/register" || location.pathname === "/") {
           navigate("/myspace", { replace: true });
@@ -26,14 +25,12 @@ export default function App() {
       })
       .catch(() => {
         logout();
-        setMe(null);
         navigate("/login", { replace: true });
       });
   }, []);
 
   function handleLogout() {
     logout();
-    setMe(null);
     navigate("/login", { replace: true });
   }
 
@@ -41,19 +38,21 @@ export default function App() {
 
   return (
     <div className="ds-page">
-      <header className="ds-header">
-        <div className="ds-brand" style={{ cursor: "pointer" }} onClick={() => navigate("/")}>
-          DataShare
-        </div>
+      {!isMySpaceRoute && (
+        <header className="ds-header">
+          <div className="ds-brand ds-clickable" onClick={() => navigate("/")}> 
+            DataShare
+          </div>
 
-        {isAuthed ? (
-          <button className="ds-cta" onClick={handleLogout}>Déconnexion</button>
-        ) : (
-          <button className="ds-cta" onClick={() => navigate("/login")}>Se connecter</button>
-        )}
-      </header>
+          {isAuthed ? (
+            <button className="ds-cta" onClick={handleLogout}>Déconnexion</button>
+          ) : (
+            <button className="ds-cta" onClick={() => navigate("/login")}>Se connecter</button>
+          )}
+        </header>
+      )}
 
-      <main className="ds-main">
+      <main className={`ds-main ${isMySpaceRoute ? "ds-main-myspace" : ""}`}>
         <Routes>
           <Route
             path="/"
@@ -71,8 +70,7 @@ export default function App() {
               <LoginPage
                 goRegister={() => navigate("/register")}
                 onLoggedIn={async () => {
-                  const m = await apiMe();
-                  setMe(m);
+                  await apiMe();
                   navigate("/myspace", { replace: true });
                 }}
               />
@@ -86,14 +84,16 @@ export default function App() {
 
           <Route
             path="/myspace"
-            element={<RequireAuth><MySpacePage /></RequireAuth>}
+            element={<RequireAuth><MySpacePage onLogout={handleLogout} /></RequireAuth>}
           />
 
           <Route path="*" element={<div className="ds-card">404</div>} />
         </Routes>
       </main>
 
-      <footer className="ds-footer">Copyright DataShare® 2025</footer>
+      {!isMySpaceRoute && (
+        <footer className="ds-footer">Copyright DataShare® 2025</footer>
+      )}
     </div>
   );
 }

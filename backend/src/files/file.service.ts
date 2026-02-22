@@ -51,6 +51,8 @@ export class FileService {
       original_name: string;
       size_bytes: string;
       expires_at: string;
+      created_at: string;
+      download_token: string;
       is_protected: boolean;
       status: 'ACTIVE' | 'EXPIRED' | 'DELETED';
     }>(
@@ -59,6 +61,8 @@ export class FileService {
           original_name,
           size_bytes,
           expires_at,
+          created_at,
+          download_token,
           (password_hash IS NOT NULL) AS is_protected,
           CASE
             WHEN deleted_at IS NOT NULL THEN 'DELETED'
@@ -78,8 +82,11 @@ export class FileService {
         originalName: r.original_name,
         sizeBytes: Number(r.size_bytes),
         expiresAt: r.expires_at,
+        createdAt: r.created_at,
         isProtected: Boolean(r.is_protected),
         status: r.status,
+        token: r.download_token,
+        downloadUrl: `/download/${r.download_token}`,
       })),
       page,
       pageSize,

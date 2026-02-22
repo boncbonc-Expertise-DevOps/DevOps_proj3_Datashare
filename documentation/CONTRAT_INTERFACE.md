@@ -112,7 +112,7 @@ Liste « Mon espace ».
 
 **Query params**
 
-* `status` : `all | active | expired` (optionnel, défaut: `all`)
+* `status` : `all | active | expired | deleted` (optionnel, défaut: `all`)
 * `page` / `pageSize` (optionnel)
 
 **Response 200 (JSON)**
@@ -124,9 +124,12 @@ Liste « Mon espace ».
       "id": "uuid-or-int",
       "originalName": "IMG\_9210.jpg",
       "sizeBytes": 2600000,
+      "createdAt": "2026-02-11T12:00:00Z",
       "expiresAt": "2026-02-18T12:00:00Z",
       "isProtected": true,
-      "status": "ACTIVE"
+      "status": "ACTIVE",
+      "token": "UhGyr",
+      "downloadUrl": "/download/UhGyr"
     }
   ],
   "page": 1,

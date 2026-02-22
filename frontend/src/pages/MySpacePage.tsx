@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-// import { apiFilesList } from "../api";
-import { apiFilesUpload, type FileItem, type FileUploadResponse } from "../api";
+import { apiFilesList, apiFilesUpload, type FileItem, type FileUploadResponse } from "../api";
 
-export function MySpacePage() {
+export function MySpacePage({ onLogout }: { onLogout: () => void }) {
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<FileItem[]>([]);
   const [pageError, setPageError] = useState<string | null>(null);
 
-  // UI state: on n'a pas encore GET /api/files, donc on gère l'affichage localement.
-  const [view, setView] = useState<"empty" | "upload" | "error">("empty");
+  const [view, setView] = useState<"list" | "upload" | "error">("list");
+  const [filter, setFilter] = useState<"all" | "active" | "expired" | "deleted">("all");
+  const [hasTouchedFilter, setHasTouchedFilter] = useState(false);
 
   // Upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -18,39 +18,37 @@ export function MySpacePage() {
   const [uploadResult, setUploadResult] = useState<FileUploadResponse | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-/* code a remplacer quand GET /api/files sera dispo
-useEffect(() => {
-  let mounted = true;
-
-  (async () => {
-    try {
-      setError(null);
-      setLoading(true);
-      const res = await apiFilesList("all");
-      if (!mounted) return;
-      setItems(res.items || []);
-    } catch (e: any) {
-      if (!mounted) return;
-      setError(e?.message || "Erreur chargement fichiers");
-    } finally {
-      if (!mounted) return;
-      setLoading(false);
-    }
-  })();
-
-  return () => {
-    mounted = false;
-  };
-}, []);
-*/
-
+  async function refreshFiles(nextFilter: typeof filter = filter) {
+    const res = await apiFilesList(nextFilter);
+    setItems(res.items || []);
+    return res.items || [];
+  }
 
   useEffect(() => {
-    // TODO: activer quand le backend aura GET /api/files
-    setItems([]); // état vide
-    setLoading(false);
-    setPageError(null);
-  }, []);
+    let mounted = true;
+
+    (async () => {
+      try {
+        setPageError(null);
+        setLoading(true);
+        const res = await apiFilesList(filter);
+        if (!mounted) return;
+        const next = res.items || [];
+        setItems(next);
+        setView("list");
+      } catch (e: any) {
+        if (!mounted) return;
+        setPageError(e?.message || "Erreur chargement fichiers");
+      } finally {
+        if (!mounted) return;
+        setLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [filter]);
 
   function resetUploadState() {
     setSelectedFile(null);
@@ -64,8 +62,27 @@ useEffect(() => {
   function goBackToMySpace() {
     setPageError(null);
     resetUploadState();
-    setView("empty");
+    setView("list");
   }
+
+  async function handleGoFiles() {
+    // "Mes fichiers" agit comme un refresh et remet le filtre sur Tous
+    setView("list");
+    setHasTouchedFilter(false);
+    setFilter("all");
+    try {
+      setPageError(null);
+      setLoading(true);
+      const next = await refreshFiles("all");
+      setItems(next);
+    } catch (e: any) {
+      setPageError(e?.message || "Erreur chargement fichiers");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const showEmptySpace = !hasTouchedFilter && filter === "all" && items.length === 0;
 
   const forbiddenExt = new Set([
     ".exe",
@@ -126,6 +143,14 @@ useEffect(() => {
         expiration_days: expirationDays,
       });
       setUploadResult(res);
+      // refresh list after successful upload
+      try {
+        const next = await refreshFiles(filter);
+        setItems(next);
+        setView("list");
+      } catch {
+        // ignore refresh errors here; user can retry later
+      }
     } catch (e: any) {
       setUploadError(e?.message || "Erreur upload");
       setView("error");
@@ -135,46 +160,23 @@ useEffect(() => {
   }
 
   if (loading) {
-    return (
-      <div className="ds-card">
-        <h2 className="ds-title">Mon espace</h2>
-        <p>Chargement...</p>
-      </div>
-    );
+    return <MySpaceShell onLogout={onLogout} onGoFiles={handleGoFiles}><div>Chargement...</div></MySpaceShell>;
   }
 
   if (pageError) {
-    return (
-      <ErrorState message={pageError} onBack={goBackToMySpace} />
-    );
+    return <MySpaceShell onLogout={onLogout} onGoFiles={handleGoFiles}><ErrorState message={pageError} onBack={goBackToMySpace} /></MySpaceShell>;
   }
 
   // Toujours afficher une page d'erreur dédiée (comme les autres pages)
   if (view === "error") {
-    return (
-      <ErrorState
-        message={uploadError ?? "Erreur"}
-        onBack={goBackToMySpace}
-      />
-    );
+    return <MySpaceShell onLogout={onLogout} onGoFiles={handleGoFiles}><ErrorState message={uploadError ?? "Erreur"} onBack={goBackToMySpace} /></MySpaceShell>;
   }
 
-  // Tant que GET /api/files n'existe pas, on force l'expérience "empty" -> "upload".
-  if (items.length === 0) {
-    if (view === "empty") {
-      return (
-        <EmptyState
-          onGoUpload={() => {
-            resetUploadState();
-            setView("upload");
-          }}
-        />
-      );
-    }
-
+  if (view === "upload") {
     return (
-      <div className="ds-card">
-        <h2 className="ds-title">Uploader un fichier</h2>
+      <MySpaceShell onLogout={onLogout} onGoFiles={handleGoFiles}>
+        <div className="ds-card ds-myspace-upload-card">
+          <h2 className="ds-title">Ajouter des fichiers</h2>
 
         <form onSubmit={onUploadSubmit} className="mt-4">
           <div className="ds-field">
@@ -262,11 +264,43 @@ useEffect(() => {
             </div>
           )}
         </form>
-      </div>
+        </div>
+      </MySpaceShell>
     );
   }
 
-  return <FilesList items={items} />;
+  return (
+    <MySpaceShell
+      onLogout={onLogout}
+      onGoFiles={handleGoFiles}
+      onAddFiles={() => {
+        resetUploadState();
+        setView("upload");
+      }}
+    >
+      {showEmptySpace ? (
+        <EmptyState
+          onGoUpload={() => {
+            resetUploadState();
+            setView("upload");
+          }}
+        />
+      ) : (
+        <FilesList
+          items={items}
+          filter={filter}
+          onFilterChange={(f) => {
+            setHasTouchedFilter(true);
+            setFilter(f);
+          }}
+          onGoUpload={() => {
+            resetUploadState();
+            setView("upload");
+          }}
+        />
+      )}
+    </MySpaceShell>
+  );
 }
 
 function EmptyState({ onGoUpload }: { onGoUpload: () => void }) {
@@ -277,7 +311,7 @@ function EmptyState({ onGoUpload }: { onGoUpload: () => void }) {
       <button
         className="ds-upload-btn"
         onClick={onGoUpload}
-        aria-label="Uploader un fichier"
+        aria-label="Ajouter des fichiers"
       >
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
           <path
@@ -305,6 +339,47 @@ function EmptyState({ onGoUpload }: { onGoUpload: () => void }) {
   );
 }
 
+function MySpaceShell({
+  children,
+  onLogout,
+  onAddFiles,
+  onGoFiles,
+}: {
+  children: React.ReactNode;
+  onLogout: () => void;
+  onAddFiles?: () => void;
+  onGoFiles?: () => void;
+}) {
+  return (
+    <div className="ds-myspace-layout">
+      <aside className="ds-myspace-sidebar">
+        <div className="ds-myspace-sidebar-brand">DataShare</div>
+        <div className="ds-myspace-nav">
+          <button className="ds-myspace-nav-item is-active" type="button" onClick={onGoFiles}>
+            Mes fichiers
+          </button>
+        </div>
+        <div className="ds-myspace-sidebar-footer">Copyright DataShare® 2025</div>
+      </aside>
+
+      <section className="ds-myspace-content">
+        <div className="ds-myspace-topbar">
+          {onAddFiles && (
+            <button className="ds-cta" type="button" onClick={onAddFiles}>
+              Ajouter des fichiers
+            </button>
+          )}
+          <button className="ds-myspace-logout" type="button" onClick={onLogout}>
+            Déconnexion
+          </button>
+        </div>
+
+        <div className="ds-myspace-body">{children}</div>
+      </section>
+    </div>
+  );
+}
+
 function ErrorState({ message, onBack }: { message: string; onBack: () => void }) {
   return (
     <div className="ds-card">
@@ -317,11 +392,146 @@ function ErrorState({ message, onBack }: { message: string; onBack: () => void }
   );
 }
 
-function FilesList({ items }: { items: FileItem[] }) {
+function FilesList({
+  items,
+  filter,
+  onFilterChange,
+  onGoUpload,
+}: {
+  items: FileItem[];
+  filter: "all" | "active" | "expired" | "deleted";
+  onFilterChange: (f: "all" | "active" | "expired" | "deleted") => void;
+  onGoUpload: () => void;
+}) {
   return (
-    <div className="ds-card">
-      <h2 className="ds-title">Mes fichiers</h2>
-      <p>(Liste à implémenter — {items.length} fichier(s))</p>
+    <div>
+      <h1 className="ds-myspace-title">Mes fichiers</h1>
+
+      <div className="ds-tabs">
+        <button
+          className={`ds-tab ${filter === "all" ? "is-active" : ""}`}
+          type="button"
+          onClick={() => onFilterChange("all")}
+        >
+          Tous
+        </button>
+        <button
+          className={`ds-tab ${filter === "active" ? "is-active" : ""}`}
+          type="button"
+          onClick={() => onFilterChange("active")}
+        >
+          Actifs
+        </button>
+        <button
+          className={`ds-tab ${filter === "expired" ? "is-active" : ""}`}
+          type="button"
+          onClick={() => onFilterChange("expired")}
+        >
+          Expirés
+        </button>
+        <button
+          className={`ds-tab ${filter === "deleted" ? "is-active" : ""}`}
+          type="button"
+          onClick={() => onFilterChange("deleted")}
+        >
+          Effacés
+        </button>
+      </div>
+
+      <div className="ds-file-list">
+        {items.map((it) => (
+          <FileRow key={String(it.id)} item={it} />
+        ))}
+
+        {items.length === 0 && (
+          <div className="opacity-80 text-sm">Aucun fichier.</div>
+        )}
+      </div>
+
+      <div className="mt-4">
+        <button className="ds-primary" type="button" onClick={onGoUpload}>
+          Ajouter des fichiers
+        </button>
+      </div>
     </div>
   );
+}
+
+function FileRow({ item }: { item: FileItem }) {
+  const expText = formatExpiration(item);
+  const sentText = formatSentAt(item.createdAt);
+  const canAccess = item.status === "ACTIVE";
+
+  return (
+    <div className="ds-file-row">
+      <div className="ds-file-left">
+        <div className="ds-file-icon" aria-hidden>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" stroke="rgba(0,0,0,.55)" strokeWidth="2" />
+            <path d="M14 2v6h6" stroke="rgba(0,0,0,.55)" strokeWidth="2" />
+          </svg>
+        </div>
+
+        <div className="ds-file-meta">
+          <div className="ds-file-name">{item.originalName}</div>
+          <div className="ds-file-sub">
+            <span className={item.status !== "ACTIVE" ? "is-bad" : undefined}>{expText}</span>
+            <span> · {sentText}</span>
+          </div>
+          {(item.status === "EXPIRED" || item.status === "DELETED") && (
+            <div className="ds-file-sub">
+              Ce fichier {item.status === "EXPIRED" ? "a expiré" : "a été supprimé"}, il n'est plus stocké chez nous
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="ds-file-right">
+        {item.isProtected && (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-label="Fichier protégé">
+            <path d="M17 11V8a5 5 0 0 0-10 0v3" stroke="rgba(0,0,0,.55)" strokeWidth="2" strokeLinecap="round" />
+            <path d="M7 11h10v10H7z" stroke="rgba(0,0,0,.55)" strokeWidth="2" strokeLinejoin="round" />
+          </svg>
+        )}
+
+        <button className="ds-mini-btn" type="button" disabled>
+          Supprimer
+        </button>
+
+        <button
+          className="ds-mini-btn is-ghost"
+          type="button"
+          disabled={!canAccess}
+          onClick={() => {
+            if (!canAccess) return;
+            window.location.href = item.downloadUrl;
+          }}
+        >
+          Accéder
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function formatSentAt(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "Date d'envoi inconnue";
+  const f = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return `Envoyé le ${f.format(d)}`;
+}
+
+function formatExpiration(item: FileItem) {
+  if (item.status === "EXPIRED") return "Expiré";
+  if (item.status === "DELETED") return "Supprimé";
+
+  const now = new Date();
+  const exp = new Date(item.expiresAt);
+  if (Number.isNaN(exp.getTime())) return "Expiration inconnue";
+
+  const ms = exp.getTime() - now.getTime();
+  const days = Math.ceil(ms / (24 * 60 * 60 * 1000));
+  if (days <= 0) return "Expire aujourd'hui";
+  if (days === 1) return "Expire demain";
+  return `Expire dans ${days} jours`;
 }

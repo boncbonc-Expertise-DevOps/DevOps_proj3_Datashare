@@ -13,9 +13,12 @@ export type FileItem = {
   id: string | number;
   originalName: string;
   sizeBytes: number;
+  createdAt: string;
   expiresAt: string;
   isProtected: boolean;
-  status: "ACTIVE" | "EXPIRED";
+  status: "ACTIVE" | "EXPIRED" | "DELETED";
+  token: string;
+  downloadUrl: string;
 };
 
 export type FilesListResponse = {
@@ -138,7 +141,7 @@ export function apiMe() {
   return apiFetch<Me>("/api/auth/me", { method: "GET" });
 }
 
-export function apiFilesList(status: "all" | "active" | "expired" = "all") {
+export function apiFilesList(status: "all" | "active" | "expired" | "deleted" = "all") {
   const qs = new URLSearchParams();
   qs.set("status", status);
   return apiFetch<FilesListResponse>(`/api/files?${qs.toString()}`, {

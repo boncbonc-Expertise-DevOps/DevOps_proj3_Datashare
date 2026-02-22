@@ -36,6 +36,8 @@ body{
   color: var(--text);
 }
 
+.ds-clickable{ cursor: pointer; }
+
 /* PAGE */
 .ds-page{
   min-height: 100vh;
@@ -78,6 +80,12 @@ body{
   align-items:center;
   justify-content:center;
   padding: 0 24px;
+}
+
+.ds-main-myspace{
+  padding: 0;
+  align-items: stretch;
+  justify-content: stretch;
 }
 
 /* CARD */
@@ -252,4 +260,210 @@ body{
 
 .ds-upload-btn:hover{
   transform: translateY(-1px);
+}
+
+/* MY SPACE LIST (template) */
+.ds-myspace-layout{
+  width: 100%;
+  height: 100vh;
+  display:flex;
+  background: rgba(255,255,255,.86);
+}
+
+.ds-myspace-sidebar{
+  width: 240px;
+  background: var(--bg);
+  display:flex;
+  flex-direction:column;
+  padding: 22px 18px;
+  box-sizing:border-box;
+}
+
+.ds-myspace-sidebar-brand{
+  font-weight: 800;
+  font-size: 24px;
+  color: #000;
+  margin-bottom: 18px;
+}
+
+.ds-myspace-nav{
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+
+.ds-myspace-nav-item{
+  height: 36px;
+  border-radius: 10px;
+  border: 0;
+  text-align:left;
+  padding: 0 14px;
+  cursor:pointer;
+  background: rgba(255,255,255,.55);
+  color: rgba(0,0,0,.82);
+  font-size: 13px;
+}
+
+.ds-myspace-nav-item.is-active{
+  background: rgba(255,255,255,.78);
+}
+
+.ds-myspace-sidebar-footer{
+  margin-top:auto;
+  color: rgba(255,255,255,.92);
+  font-size: 12px;
+}
+
+.ds-myspace-content{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+.ds-myspace-topbar{
+  height: var(--header-h);
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap: 12px;
+  padding: 0 26px;
+  box-sizing:border-box;
+}
+
+.ds-myspace-logout{
+  border: 0;
+  background: transparent;
+  color: rgba(0,0,0,.7);
+  cursor:pointer;
+  font-size: 13px;
+}
+
+.ds-myspace-body{
+  flex:1;
+  padding: 22px 26px;
+  box-sizing:border-box;
+}
+
+.ds-myspace-title{
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #000;
+}
+
+.ds-tabs{
+  margin-top: 14px;
+  display:inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.55);
+}
+
+.ds-tab{
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 0;
+  cursor:pointer;
+  background: transparent;
+  color: rgba(0,0,0,.75);
+  font-size: 12px;
+}
+
+.ds-tab.is-active{
+  background: rgba(226,127,41,.18);
+  color: var(--accent);
+}
+
+.ds-file-list{
+  margin-top: 18px;
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+
+.ds-file-row{
+  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(0,0,0,.10);
+  border-radius: 12px;
+  padding: 12px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 14px;
+}
+
+.ds-file-left{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ds-file-icon{
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(0,0,0,.06);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.ds-file-meta{
+  min-width: 0;
+}
+
+.ds-file-name{
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(0,0,0,.85);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width: 560px;
+}
+
+.ds-file-sub{
+  font-size: 11px;
+  color: rgba(0,0,0,.62);
+}
+
+.ds-file-sub .is-bad{
+  color: rgba(180, 27, 27, .9);
+}
+
+.ds-file-right{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  flex-shrink:0;
+}
+
+.ds-mini-btn{
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(226,127,41,.55);
+  background: rgba(226,127,41,.10);
+  color: var(--accent);
+  font-size: 12px;
+  cursor:pointer;
+}
+
+.ds-mini-btn:disabled{
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.ds-mini-btn.is-ghost{
+  border-color: rgba(0,0,0,.14);
+  background: rgba(255,255,255,.65);
+  color: rgba(0,0,0,.70);
+}
+
+.ds-myspace-upload-card{
+  width: min(656px, 100%);
 }
