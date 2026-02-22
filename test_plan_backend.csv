@@ -1,0 +1,23 @@
+ID;Fonctionnalité;Type;Cible;Préconditions;Étapes;Résultat attendu;Priorité;Automatisé
+B-AUTH-01;Register OK;Intégration;POST /api/auth/register;Email unique;Envoyer email+password valides;201 + id + email;P1;Oui
+B-AUTH-02;Register email déjà pris;Intégration;POST /api/auth/register;Compte existant;Ré-enregistrer même email;409;P1;Oui
+B-AUTH-03;Login OK;Intégration;POST /api/auth/login;Compte existant;Envoyer email+password;200 + accessToken;P1;Oui
+B-AUTH-04;Login KO;Intégration;POST /api/auth/login;Compte existant;Mauvais password;401;P1;Oui
+B-FILES-01;Upload OK;Intégration;POST /api/files/upload;JWT valide;Upload fichier autorisé;201 + token + expiresAt;P1;Partiel
+B-FILES-02;Upload extension interdite;Unitaire;FileService.validateFile;-;Fichier .exe;400;P1;Oui
+B-FILES-03;Upload quota atteint;Unitaire;FileService.validateFile;10 actifs;Upload 11e;400;P2;Oui
+B-HIST-01;Historique all;Intégration;GET /api/files;JWT valide;GET status=all;200 + champs attendus;P1;Partiel
+B-DEL-01;Suppression OK;Intégration;DELETE /api/files/:id;JWT propriétaire;DELETE;204 + deleted_at set;P1;Partiel
+B-DL-01;Meta OK;Unitaire;FileService.getPublicFileMeta;Token actif;Appeler meta;JSON + isProtected;P1;Oui
+B-DL-02;Token invalide;Unitaire;FileService.preparePublicDownload;-;Token non UUID;404;P1;Oui
+B-DL-03;Lien expiré;Unitaire;FileService.preparePublicDownload;expires_at passé;Download;410;P1;Oui
+B-DL-04;Fichier supprimé;Unitaire;FileService.preparePublicDownload;deleted_at non null;Download;410;P1;Oui
+B-DL-05;Protégé sans mdp;Unitaire;FileService.preparePublicDownload;password_hash non null;GET sans password;401;P1;Oui
+B-DL-06;Protégé mdp incorrect;Unitaire;FileService.preparePublicDownload;password_hash non null;POST mdp faux;401;P1;Oui
+B-DL-07;Protégé OK;Unitaire;FileService.preparePublicDownload;password_hash non null;POST mdp bon;streamPath + headers;P1;Oui
+B-DL-08;Routes download: headers/StreamableFile;Unitaire;DownloadController + ApiDownloadController;FileService mock;Appeler GET/POST;Headers OK + StreamableFile;P2;Oui
+B-FILES-04;Routes files: validations + délégation;Unitaire;FileController;FileService mock;Appeler list/upload/delete;Exceptions + appels service;P2;Oui
+B-OBS-01;Logger HTTP;Unitaire;requestLoggerMiddleware;console.log spy;Simuler res.finish;Ligne JSON loggée;P3;Oui
+B-AUTH-05;JWT strategy validate;Unitaire;JwtStrategy.validate;payload JWT;validate(payload);userId/email mapping;P3;Oui
+B-MOD-01;Modules smoke;Unitaire;App/Auth/Db/File modules;imports TS;Importer modules;Pas de crash;P3;Oui
+B-APP-01;Hello service;Unitaire;AppService.getHello;-;Appeler getHello;Hello World!;P4;Oui

@@ -1,9 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { requestLoggerMiddleware } from './observability/request-logger.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Logs structurés (JSON) pour suivi perf/ops
+  app.use(requestLoggerMiddleware);
 
   //  Activation validation globale
   app.useGlobalPipes(
