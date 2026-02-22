@@ -142,6 +142,11 @@ body{
   box-shadow: 0 0 0 3px rgba(226,127,41,.18);
 }
 
+.ds-center-text{ text-align:center; }
+.ds-input-row{ display:flex; align-items:center; }
+.ds-primary-link{ display:flex; align-items:center; justify-content:center; text-decoration:none; }
+.ds-mt-16{ margin-top: 16px; }
+
 /* LINK / TERTIARY BUTTON (Figma orange #E27F29, font 16) */
 .ds-link{
   display:block;

@@ -5,6 +5,7 @@ import { apiMe, getToken, logout } from "./api";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { MySpacePage } from "./pages/MySpacePage";
+import { DownloadPage } from "./pages/DownloadPage";
 
 export default function App() {
   const navigate = useNavigate();
@@ -86,6 +87,8 @@ export default function App() {
             path="/myspace"
             element={<RequireAuth><MySpacePage onLogout={handleLogout} /></RequireAuth>}
           />
+
+          <Route path="/download/:token" element={<DownloadPage />} />
 
           <Route path="*" element={<div className="ds-card">404</div>} />
         </Routes>

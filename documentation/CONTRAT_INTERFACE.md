@@ -161,7 +161,10 @@ Suppression.
 
 ## Téléchargement public (sans JWT)
 
-### GET `/download/{token}/meta`
+> Note (implémentation frontend) : l’application React utilise les endpoints sous `/api/download/...`
+> (proxy Vite déjà configuré sur `/api`). Ces routes sont des alias du téléchargement public.
+
+### GET `/download/{token}/meta` (ou `GET /api/download/{token}/meta`)
 
 Métadonnées publiques (affichage avant téléchargement).
 
@@ -185,6 +188,8 @@ Métadonnées publiques (affichage avant téléchargement).
 
 ### GET `/download/{token}`
 
+Alias: `GET /api/download/{token}`
+
 Téléchargement public.
 
 * Si le fichier n’est pas protégé : stream direct.
@@ -199,6 +204,8 @@ Téléchargement public.
 ---
 
 ### POST `/download/{token}`
+
+Alias: `POST /api/download/{token}`
 
 Vérifie le mot de passe puis renvoie le fichier (stream).
 

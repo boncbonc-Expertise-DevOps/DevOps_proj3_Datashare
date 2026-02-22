@@ -12,12 +12,19 @@ Ce projet est structuré en **monorepo** contenant :
 
 ## 📦 Version
 
+version: **v2.0.0**
+Release date: 22-02-2026
+Status: Stable
+Comment: Implémentation complète  US02 (Téléchargment Fichiers) backend et frontend
+MVP opérationnel - testé manuellement étape par étape
+
+
+# History:
 version: **v1.3.0**
 Release date: 22-02-2026
 Status: Stable
 Comment: Implémentation complète  US06 (Effacer Fichiers) backend et frontend
 
-# History:
 version: **v1.2.0**
 Release date: 22-02-2026
 Status: Stable
