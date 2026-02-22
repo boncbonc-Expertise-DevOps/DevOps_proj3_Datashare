@@ -3,6 +3,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import * as path from 'path';
 import { FileController } from './file.controller';
+import { DownloadController } from './download.controller';
 import { FileService } from './file.service';
 import { DbModule } from '../db/db.module';
 import { DbService } from '../db/db.service';
@@ -68,7 +69,7 @@ const FORBIDDEN_EXTENSIONS = [
       }),
     }),
   ],
-  controllers: [FileController],
+  controllers: [FileController, DownloadController],
   providers: [FileService],
   exports: [FileService]
 })

@@ -4,6 +4,8 @@ import {
   InternalServerErrorException,
   ForbiddenException,
   NotFoundException,
+  GoneException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { randomUUID } from 'crypto';
@@ -22,6 +24,113 @@ const MAX_EXPIRATION_DAYS = 7;
 @Injectable()
 export class FileService {
   constructor(private readonly db: DbService) {}
+
+  async getPublicFileMeta(params: { token: string }) {
+    const row = await this.findDownloadRowByTokenOrThrow({ token: params.token });
+    return {
+      token: params.token,
+      originalName: row.original_name,
+      mimeType: row.mime_type,
+      sizeBytes: Number(row.size_bytes),
+      expiresAt: row.expires_at,
+      isProtected: Boolean(row.password_hash),
+    };
+  }
+
+  async preparePublicDownload(params: { token: string; password?: string }) {
+    const row = await this.findDownloadRowByTokenOrThrow({ token: params.token });
+
+    const isProtected = Boolean(row.password_hash);
+    if (isProtected && !params.password) {
+      throw new UnauthorizedException('Mot de passe requis');
+    }
+    if (isProtected) {
+      const ok = await bcrypt.compare(params.password!, row.password_hash!);
+      if (!ok) throw new UnauthorizedException('Mot de passe incorrect');
+    }
+
+    const streamPath = this.safeResolveStoragePath(row.storage_path);
+    if (!fs.existsSync(streamPath)) {
+      throw new GoneException('Fichier indisponible');
+    }
+
+    return {
+      streamPath,
+      mimeType: row.mime_type,
+      sizeBytes: Number(row.size_bytes),
+      contentDisposition: this.buildContentDisposition(row.original_name),
+    };
+  }
+
+  private isProbablyUuid(token: string): boolean {
+    // randomUUID() renvoie un UUID v4 (36 chars). On accepte aussi d'autres UUID valides.
+    return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(token);
+  }
+
+  private async findDownloadRowByTokenOrThrow(params: { token: string }) {
+    const token = (params.token ?? '').trim();
+    if (!token || token.length > 100) throw new NotFoundException('Token invalide');
+    if (!this.isProbablyUuid(token)) throw new NotFoundException('Token invalide');
+
+    const r = await this.db.query<{
+      original_name: string;
+      mime_type: string;
+      size_bytes: string;
+      storage_path: string;
+      download_token: string;
+      password_hash: string | null;
+      expires_at: string;
+      deleted_at: string | null;
+    }>(
+      `SELECT original_name, mime_type, size_bytes, storage_path, download_token, password_hash, expires_at, deleted_at
+       FROM files
+       WHERE download_token = $1
+       LIMIT 1`,
+      [token],
+    );
+
+    const row = r.rows[0];
+    if (!row) throw new NotFoundException('Token invalide');
+    if (row.deleted_at) throw new GoneException('Fichier supprimé');
+
+    const expiresAtMs = new Date(row.expires_at).getTime();
+    if (!Number.isFinite(expiresAtMs)) {
+      throw new InternalServerErrorException('Métadonnées fichier invalides');
+    }
+    if (expiresAtMs <= Date.now()) throw new GoneException('Fichier expiré');
+
+    return row;
+  }
+
+  private safeResolveStoragePath(storagePath: string): string {
+    if (!storagePath) throw new GoneException('Fichier indisponible');
+
+    const uploadDirAbs = path.resolve(UPLOAD_DIR);
+    const candidateAbs = path.isAbsolute(storagePath)
+      ? path.resolve(storagePath)
+      : path.resolve(UPLOAD_DIR, storagePath);
+
+    const normalizeForCompare = (p: string) =>
+      process.platform === 'win32' ? p.toLowerCase() : p;
+
+    const base = normalizeForCompare(uploadDirAbs);
+    const candidate = normalizeForCompare(candidateAbs);
+
+    // Empêche toute lecture en dehors du dossier uploads.
+    if (candidate !== base && !candidate.startsWith(base + path.sep)) {
+      throw new GoneException('Fichier indisponible');
+    }
+
+    return candidateAbs;
+  }
+
+  private buildContentDisposition(originalName: string): string {
+    const fallbackName = (originalName || 'download')
+      .replace(/[\r\n"\\]/g, '_')
+      .slice(0, 180);
+    const encoded = encodeURIComponent(originalName || 'download');
+    return `attachment; filename="${fallbackName}"; filename*=UTF-8''${encoded}`;
+  }
 
   async deleteUserFile(params: { userId: number; fileId: number }): Promise<void> {
     const { userId, fileId } = params;

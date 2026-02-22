@@ -161,6 +161,28 @@ Suppression.
 
 ## Téléchargement public (sans JWT)
 
+### GET `/download/{token}/meta`
+
+Métadonnées publiques (affichage avant téléchargement).
+
+**Réponses**
+
+* `200` (JSON)
+
+```json
+{
+  "token": "UhGyr",
+  "originalName": "IMG_9210.jpg",
+  "mimeType": "image/jpeg",
+  "sizeBytes": 2600000,
+  "expiresAt": "2026-02-18T12:00:00Z",
+  "isProtected": false
+}
+```
+
+* `404` token invalide
+* `410` fichier expiré (ou supprimé)
+
 ### GET `/download/{token}`
 
 Téléchargement public.
