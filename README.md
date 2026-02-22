@@ -12,12 +12,16 @@ Ce projet est structuré en **monorepo** contenant :
 
 ## 📦 Version
 
+version: **v1.3.0**
+Release date: 22-02-2026
+Status: Stable
+Comment: Implémentation complète  US06 (Effacer Fichiers) backend et frontend
+
+# History:
 version: **v1.2.0**
 Release date: 22-02-2026
 Status: Stable
 Comment: Implémentation complète  US05 (Liste Fichiers / historique) backend et frontend
-
-# History:
 
 version: **v1.1.0**
 Release date: 22-02-2026

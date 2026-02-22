@@ -1,4 +1,10 @@
-import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { randomUUID } from 'crypto';
 import * as fs from 'fs';
@@ -16,6 +22,45 @@ const MAX_EXPIRATION_DAYS = 7;
 @Injectable()
 export class FileService {
   constructor(private readonly db: DbService) {}
+
+  async deleteUserFile(params: { userId: number; fileId: number }): Promise<void> {
+    const { userId, fileId } = params;
+    if (!fileId || fileId <= 0) throw new BadRequestException('Identifiant de fichier invalide');
+
+    const r = await this.db.query<{
+      id: string;
+      user_id: string;
+      storage_path: string;
+      deleted_at: string | null;
+    }>(
+      `SELECT id, user_id, storage_path, deleted_at
+       FROM files
+       WHERE id = $1
+       LIMIT 1`,
+      [fileId],
+    );
+
+    const row = r.rows[0];
+    if (!row) throw new NotFoundException('Fichier introuvable');
+    if (Number(row.user_id) !== userId) throw new ForbiddenException('Pas propriétaire');
+    if (row.deleted_at) throw new NotFoundException('Fichier introuvable');
+
+    // Suppression physique : si le fichier n'existe déjà plus, on continue.
+    try {
+      if (row.storage_path && fs.existsSync(row.storage_path)) {
+        fs.unlinkSync(row.storage_path);
+      }
+    } catch {
+      // on ne bloque pas l'action utilisateur si unlink échoue
+    }
+
+    await this.db.query(
+      `UPDATE files
+       SET deleted_at = NOW()
+       WHERE id = $1 AND deleted_at IS NULL`,
+      [fileId],
+    );
+  }
 
   async listUserFiles(params: { userId: number; query: ListFilesQueryDto }) {
     const status = params.query.status ?? 'all';
@@ -200,8 +245,8 @@ export class FileService {
     const { userId, file, storagePath, downloadToken, expiresAt, passwordHash } = params;
     try {
       const result = await this.db.query<{ id: string; created_at: string }>(
-        `INSERT INTO files (user_id, original_name, mime_type, size_bytes, storage_path, download_token, password_hash, expires_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `INSERT INTO files (user_id, original_name, mime_type, size_bytes, storage_path, download_token, password_hash, expires_at, deleted_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NULL)
          RETURNING id, created_at`,
         [userId, file.originalname, file.mimetype, file.size, storagePath, downloadToken, passwordHash || null, expiresAt]
       );

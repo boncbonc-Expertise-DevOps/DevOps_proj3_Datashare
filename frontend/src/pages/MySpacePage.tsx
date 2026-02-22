@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { apiFilesList, apiFilesUpload, type FileItem, type FileUploadResponse } from "../api";
+import { apiFilesDelete, apiFilesList, apiFilesUpload, type FileItem, type FileUploadResponse } from "../api";
 
 export function MySpacePage({ onLogout }: { onLogout: () => void }) {
   const [loading, setLoading] = useState(true);
@@ -9,6 +9,7 @@ export function MySpacePage({ onLogout }: { onLogout: () => void }) {
   const [view, setView] = useState<"list" | "upload" | "error">("list");
   const [filter, setFilter] = useState<"all" | "active" | "expired" | "deleted">("all");
   const [hasTouchedFilter, setHasTouchedFilter] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | number | null>(null);
 
   // Upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -22,6 +23,24 @@ export function MySpacePage({ onLogout }: { onLogout: () => void }) {
     const res = await apiFilesList(nextFilter);
     setItems(res.items || []);
     return res.items || [];
+  }
+
+  async function handleDelete(item: FileItem) {
+    if (item.status !== "ACTIVE") return;
+    const ok = window.confirm("Supprimer ce fichier ? Cette action est irréversible.");
+    if (!ok) return;
+
+    setDeletingId(item.id);
+    try {
+      await apiFilesDelete(item.id);
+      const next = await refreshFiles(filter);
+      setItems(next);
+      setView("list");
+    } catch (e: any) {
+      setPageError(e?.message || "Erreur suppression");
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   useEffect(() => {
@@ -293,6 +312,8 @@ export function MySpacePage({ onLogout }: { onLogout: () => void }) {
             setHasTouchedFilter(true);
             setFilter(f);
           }}
+          onDelete={handleDelete}
+          deletingId={deletingId}
           onGoUpload={() => {
             resetUploadState();
             setView("upload");
@@ -396,11 +417,15 @@ function FilesList({
   items,
   filter,
   onFilterChange,
+  onDelete,
+  deletingId,
   onGoUpload,
 }: {
   items: FileItem[];
   filter: "all" | "active" | "expired" | "deleted";
   onFilterChange: (f: "all" | "active" | "expired" | "deleted") => void;
+  onDelete: (item: FileItem) => void;
+  deletingId: string | number | null;
   onGoUpload: () => void;
 }) {
   return (
@@ -440,7 +465,7 @@ function FilesList({
 
       <div className="ds-file-list">
         {items.map((it) => (
-          <FileRow key={String(it.id)} item={it} />
+          <FileRow key={String(it.id)} item={it} onDelete={onDelete} deleting={deletingId === it.id} />
         ))}
 
         {items.length === 0 && (
@@ -457,10 +482,11 @@ function FilesList({
   );
 }
 
-function FileRow({ item }: { item: FileItem }) {
+function FileRow({ item, onDelete, deleting }: { item: FileItem; onDelete: (item: FileItem) => void; deleting: boolean }) {
   const expText = formatExpiration(item);
   const sentText = formatSentAt(item.createdAt);
   const canAccess = item.status === "ACTIVE";
+  const canDelete = item.status === "ACTIVE";
 
   return (
     <div className="ds-file-row">
@@ -494,8 +520,13 @@ function FileRow({ item }: { item: FileItem }) {
           </svg>
         )}
 
-        <button className="ds-mini-btn" type="button" disabled>
-          Supprimer
+        <button
+          className="ds-mini-btn"
+          type="button"
+          disabled={!canDelete || deleting}
+          onClick={() => onDelete(item)}
+        >
+          {deleting ? "Suppression..." : "Supprimer"}
         </button>
 
         <button

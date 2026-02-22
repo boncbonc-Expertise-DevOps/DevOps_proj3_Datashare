@@ -2,6 +2,8 @@ import {
   Controller,
   Post,
   Get,
+  Delete,
+  HttpCode,
   UseGuards,
   UploadedFile,
   UseInterceptors,
@@ -9,6 +11,8 @@ import {
   Body,
   BadRequestException,
   Query,
+  Param,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -27,6 +31,17 @@ export class FileController {
     if (!userId) throw new BadRequestException('Utilisateur non authentifié');
 
     return await this.fileService.listUserFiles({ userId, query });
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(204)
+  async deleteFile(@Req() req: any, @Param('id', ParseIntPipe) id: number) {
+    const rawUserId = req.user?.userId;
+    const userId = Number(rawUserId);
+    if (!userId) throw new BadRequestException('Utilisateur non authentifié');
+
+    await this.fileService.deleteUserFile({ userId, fileId: id });
   }
 
   @Post('upload')

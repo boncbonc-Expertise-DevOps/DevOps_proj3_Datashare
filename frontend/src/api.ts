@@ -109,7 +109,20 @@ async function apiFetch<T>(url: string, init: RequestInit = {}): Promise<T> {
 
   // 204 no-content
   if (res.status === 204) return undefined as T;
-  return res.json() as Promise<T>;
+
+  const ct = res.headers.get("content-type") || "";
+  const len = res.headers.get("content-length");
+  if (len === "0") return undefined as T;
+  if (!ct.includes("application/json")) {
+    const text = await res.text();
+    if (!text) return undefined as T;
+    // fallback: if server returned non-json payload on success
+    return text as unknown as T;
+  }
+
+  const text = await res.text();
+  if (!text) return undefined as T;
+  return JSON.parse(text) as T;
 }
 
 // Helper pour multipart/form-data: ne jamais forcer Content-Type (le navigateur gère le boundary)
@@ -182,6 +195,10 @@ export async function apiFilesUpload(req: FileUploadRequest): Promise<FileUpload
     expiresAt,
     isProtected: Boolean(isProtected),
   };
+}
+
+export function apiFilesDelete(id: string | number) {
+  return apiFetch<void>(`/api/files/${id}`, { method: "DELETE" });
 }
 
 
