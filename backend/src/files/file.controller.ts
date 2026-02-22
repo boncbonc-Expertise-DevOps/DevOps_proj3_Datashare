@@ -1,20 +1,33 @@
 import {
   Controller,
   Post,
+  Get,
   UseGuards,
   UploadedFile,
   UseInterceptors,
   Req,
   Body,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { FileService } from './file.service';
+import { ListFilesQueryDto } from './dto/list-files.query.dto';
 
 @Controller('api/files')
 export class FileController {
   constructor(private readonly fileService: FileService) {}
+
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async listFiles(@Req() req: any, @Query() query: ListFilesQueryDto) {
+    const rawUserId = req.user?.userId;
+    const userId = Number(rawUserId);
+    if (!userId) throw new BadRequestException('Utilisateur non authentifié');
+
+    return await this.fileService.listUserFiles({ userId, query });
+  }
 
   @Post('upload')
   @UseGuards(JwtAuthGuard)

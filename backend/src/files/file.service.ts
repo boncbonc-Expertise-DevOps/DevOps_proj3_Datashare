@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as bcrypt from 'bcryptjs';
+import type { ListFilesQueryDto } from './dto/list-files.query.dto';
 
 // Stockage local : <backend>/uploads (résout correctement en dev/prod)
 const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
@@ -15,6 +16,76 @@ const MAX_EXPIRATION_DAYS = 7;
 @Injectable()
 export class FileService {
   constructor(private readonly db: DbService) {}
+
+  async listUserFiles(params: { userId: number; query: ListFilesQueryDto }) {
+    const status = params.query.status ?? 'all';
+    const page = params.query.page ?? 1;
+    const pageSize = params.query.pageSize ?? 20;
+    const offset = (page - 1) * pageSize;
+
+    const whereParts: string[] = ['user_id = $1'];
+    const values: any[] = [params.userId];
+
+    if (status === 'active') {
+      whereParts.push('deleted_at IS NULL');
+      whereParts.push('expires_at > NOW()');
+    } else if (status === 'expired') {
+      whereParts.push('deleted_at IS NULL');
+      whereParts.push('expires_at <= NOW()');
+    } else if (status === 'deleted') {
+      whereParts.push('deleted_at IS NOT NULL');
+    }
+
+    const whereSql = whereParts.length ? `WHERE ${whereParts.join(' AND ')}` : '';
+
+    const totalRes = await this.db.query<{ total: string }>(
+      `SELECT COUNT(*)::text AS total
+       FROM files
+       ${whereSql}`,
+      values,
+    );
+    const total = Number.parseInt(totalRes.rows[0]?.total ?? '0', 10);
+
+    const listRes = await this.db.query<{
+      id: string;
+      original_name: string;
+      size_bytes: string;
+      expires_at: string;
+      is_protected: boolean;
+      status: 'ACTIVE' | 'EXPIRED' | 'DELETED';
+    }>(
+      `SELECT
+          id,
+          original_name,
+          size_bytes,
+          expires_at,
+          (password_hash IS NOT NULL) AS is_protected,
+          CASE
+            WHEN deleted_at IS NOT NULL THEN 'DELETED'
+            WHEN expires_at <= NOW() THEN 'EXPIRED'
+            ELSE 'ACTIVE'
+          END AS status
+        FROM files
+        ${whereSql}
+        ORDER BY created_at DESC
+        LIMIT $2 OFFSET $3`,
+      [params.userId, pageSize, offset],
+    );
+
+    return {
+      items: listRes.rows.map((r) => ({
+        id: Number(r.id),
+        originalName: r.original_name,
+        sizeBytes: Number(r.size_bytes),
+        expiresAt: r.expires_at,
+        isProtected: Boolean(r.is_protected),
+        status: r.status,
+      })),
+      page,
+      pageSize,
+      total,
+    };
+  }
 
   /**
    * Point d'entrée unique pour l'upload :
