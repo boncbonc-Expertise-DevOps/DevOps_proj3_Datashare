@@ -1,47 +1,118 @@
-# DataShare -- MVP Prototype
+# DataShare — MVP Prototype
 
-Prototype d'une plateforme sécurisée de transfert de fichiers.
+Prototype d’une plateforme sécurisée de partage/transfert de fichiers.
 
-Ce projet est structuré en **monorepo** contenant :
+Monorepo:
+- `backend/` → API NestJS
+- `frontend/` → React (Vite) + React Router (`react-router-dom`) + Tailwind CSS
+- DB PostgreSQL (Docker recommandé)
 
--   `backend/` → API NestJS
--   `frontend/` → Application React (Vite)
--   PostgreSQL exécuté via Docker
+## Démarrage rapide
 
-------------------------------------------------------------------------
+### ✅ Prérequis
+- Node.js ≥ 18 (Node 22 LTS recommandé)
+- npm
+- PostgreSQL 16 (ou Docker)
 
-## 📦 Version
+Ports par défaut:
+- Backend: http://localhost:3000
+- Frontend: http://localhost:5173
 
-version: **v2.0.0**
-Release date: 22-02-2026
-Status: Stable
-Comment: Implémentation complète  US02 (Téléchargment Fichiers) backend et frontend
-MVP opérationnel - testé manuellement étape par étape
+### 1) Base de données (PostgreSQL)
 
+Option A — via Docker (recommandé):
 
-# History:
-version: **v1.3.0**
-Release date: 22-02-2026
-Status: Stable
-Comment: Implémentation complète  US06 (Effacer Fichiers) backend et frontend
+```bash
+docker run --name datashare-db \
+    -e POSTGRES_USER=datashare \
+    -e POSTGRES_PASSWORD=datashare \
+    -e POSTGRES_DB=datashare \
+    -p 5432:5432 \
+    -d postgres:16
+```
 
-version: **v1.2.0**
-Release date: 22-02-2026
-Status: Stable
-Comment: Implémentation complète  US05 (Liste Fichiers / historique) backend et frontend
+Option B — PostgreSQL local:
+- Créer une DB `datashare` et un user (ou adapter les variables d’env).
 
-version: **v1.1.0**
-Release date: 22-02-2026
-Status: Stable
-Comment: Implémentation complète  US01 (Upload) backenbd et frontend
-         avec support complet de github copilot gpt 4.1/5.2 
+### 2) Schéma DB (migration SQL)
+Le schéma est défini ici: `backend/migrations/001_init.sql`.
 
-version: **v1.0.0**
-Release date: 20-02-2026
-Status: Stable
-Comment: Version initiale correspondant à l'implémentation de US03 (Register) et US04 (Login)
+Appliquer la migration (exemple avec `psql`):
 
-------------------------------------------------------------------------
+```bash
+psql -h localhost -p 5432 -U datashare -d datashare -f backend/migrations/001_init.sql
+```
+
+### 3) Installation des dépendances
+
+Backend:
+
+```bash
+cd backend
+npm install
+```
+
+Frontend:
+
+```bash
+cd ../frontend
+npm install
+```
+
+### 4) Configuration backend (.env)
+Créer `backend/.env` (exemple):
+
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=datashare
+DB_PASSWORD=datashare
+DB_NAME=datashare
+
+JWT_SECRET=CleSuperSecreteAchanger
+```
+
+### 5) Lancer l’application
+
+Backend (terminal 1):
+
+```bash
+cd backend
+npm run start:dev
+```
+
+Frontend (terminal 2):
+
+```bash
+cd frontend
+npm run dev
+```
+
+Le frontend utilise un proxy Vite:
+- `/api` → `http://localhost:3000`
+
+## Commandes utiles (qualité)
+
+Voir le détail dans `TESTING.md`.
+
+Backend:
+- Tests: `cd backend && npm test`
+- Couverture: `cd backend && npm run test:cov`
+
+Frontend:
+- Tests: `cd frontend && npm run test:run`
+- Couverture: `cd frontend && npm run test:cov`
+
+E2E UI (Cypress):
+- Pré-requis: backend + frontend démarrés
+- Run headless: `cd frontend && npm run e2e`
+- Runner: `cd frontend && npm run e2e:open`
+
+## Documentation projet
+- Tests: `TESTING.md`
+- Sécurité: `SECURITY.md`
+- Performance: `PERF.md`
+- Maintenance: `MAINTENANCE.md`
 
 ## 🏗 Stack technique
 
@@ -54,14 +125,13 @@ Comment: Version initiale correspondant à l'implémentation de US03 (Register) 
 
 ### Frontend
 
--   React
--   Vite
+-   React (Vite) + React Router (react-router-dom)
+-   Tailwind CSS
 -   Fetch API
 
 ### Base de données
-
--   PostgreSQL 16
--   Exécutée via Docker
+- PostgreSQL 16
+- Exécutée via Docker (recommandé)
 
 ------------------------------------------------------------------------
 
@@ -83,95 +153,19 @@ Comment: Version initiale correspondant à l'implémentation de US03 (Register) 
 
 ------------------------------------------------------------------------
 
-## 🚀 Installation
+## 📦 Version
 
-### ✅ Prérequis
+version: **v2.0.0**
+Release date: 22-02-2026
+Status: Stable
+Comment: Implémentation complète US02 (Téléchargement via lien) backend et frontend.
+MVP finalisé
 
--   Node.js ≥ 18
--   npm
--   Docker
+### History
+version: **v1.3.0** (22-02-2026) — US06 (Effacer fichiers)
 
-------------------------------------------------------------------------
+version: **v1.2.0** (22-02-2026) — US05 (Liste fichiers / historique)
 
-## 🐘 Base de données (PostgreSQL via Docker)
+version: **v1.1.0** (22-02-2026) — US01 (Upload) avec support GitHub Copilot (GPT-4.1/5.2)
 
-### Lancer PostgreSQL
-
-``` bash
-docker run --name datashare-db \
-  -e POSTGRES_USER=datashare \
-  -e POSTGRES_PASSWORD=datashare \
-  -e POSTGRES_DB=datashare \
-  -p 5432:5432 \
-  -d postgres:16
-```
-
-### Vérifier que le conteneur tourne
-
-``` bash
-docker ps
-```
-
-------------------------------------------------------------------------
-
-## 🔧 Backend -- NestJS
-
-### Installation
-
-``` bash
-cd backend
-npm install
-```
-
-### Configuration
-
-Créer un fichier `.env` dans `backend/` :
-
-    DB_HOST=localhost
-    DB_PORT=5432
-    DB_USER=datashare
-    DB_PASSWORD=datashare
-    DB_NAME=datashare
-
-    JWT_SECRET=CleSuperSecretAchanger
-
-### Lancer en mode développement
-
-``` bash
-npm run start:dev
-```
-
-Backend disponible sur :
-
-    http://localhost:3000
-
-------------------------------------------------------------------------
-
-## ⚛️ Frontend -- React (Vite)
-
-### Installation
-
-``` bash
-cd frontend
-npm install
-```
-
-### Lancer en mode développement
-
-``` bash
-npm run dev
-```
-
-Frontend disponible sur :
-
-    http://localhost:5173
-
-------------------------------------------------------------------------
-
-## 🔗 Communication Frontend / Backend
-
-Le frontend communique avec le backend via :
-
-    /api → http://localhost:3000
-
-(Proxy configuré dans `vite.config.ts`)
+version: **v1.0.0** (20-02-2026) — US03 (Register) + US04 (Login)
