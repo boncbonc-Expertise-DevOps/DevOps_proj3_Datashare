@@ -1,0 +1,13 @@
+ID;Fonctionnalité;Type;Cible;Préconditions;Étapes;Résultat attendu;Priorité;Automatisé
+F-APP-01;Routing App (pages + 404);Unitaire;frontend/src/App.tsx;Vitest + jsdom;Rendre App + naviguer;Landing/Login/Register + NotFound;P1;Oui
+F-API-01;Helpers token + auth header;Unitaire;frontend/src/api.ts;localStorage dispo;getToken/apiMe;Token lu + Authorization ajouté;P1;Oui
+F-API-02;Login stocke accessToken;Unitaire;frontend/src/api.ts;fetch mock;apiLogin;Token enregistré en localStorage;P1;Oui
+F-DL-01;Download meta non protégé;Unitaire;frontend/src/pages/DownloadPage.tsx;fetch mock meta;Ouvrir /download/:token;Affiche nom + bouton télécharger;P1;Oui
+F-DL-02;Download protégé mauvais mdp;Unitaire;frontend/src/pages/DownloadPage.tsx;fetch mock 401;Saisir mdp + confirmer;Message d'erreur affiché;P1;Oui
+F-DL-03;Download protégé OK (blob);Unitaire;frontend/src/pages/DownloadPage.tsx;fetch mock blob;Saisir mdp + confirmer;Téléchargement déclenché;P2;Oui
+F-MY-01;Liste + filtre actifs;Unitaire;frontend/src/pages/MySpacePage.tsx;apiFilesList mock;Cliquer filtre Actifs;2 appels apiFilesList + status correct;P1;Oui
+F-MY-02;EmptyState (aucun fichier);Unitaire;frontend/src/pages/MySpacePage.tsx;apiFilesList retourne vide;Rendre page;Affiche EmptyState + boutons upload;P2;Oui
+F-MY-03;Suppression avec confirm;Unitaire;frontend/src/pages/MySpacePage.tsx;confirm=true + apiFilesDelete mock;Cliquer Supprimer;apiFilesDelete appelé + refresh;P1;Oui
+F-MY-04;Upload extension interdite;Unitaire;frontend/src/pages/MySpacePage.tsx;apiFilesList vide;Choisir fichier .exe;Vue Erreur + message type interdit;P1;Oui
+F-MY-05;Upload mot de passe trop court;Unitaire;frontend/src/pages/MySpacePage.tsx;apiFilesList vide;Choisir fichier + mdp<6 + submit;Vue Erreur + message min 6;P1;Oui
+F-MY-06;Statuts + icône protégé;Unitaire;frontend/src/pages/MySpacePage.tsx;apiFilesList items variés;Rendre page;Affiche libellés expiré/supprimé + aria-label protégé;P2;Oui
