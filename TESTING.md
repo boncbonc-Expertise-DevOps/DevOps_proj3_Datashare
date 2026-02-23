@@ -16,6 +16,14 @@ Documenter le plan de tests (MVP) et fournir une base de tests automatisés (bac
 - Lancer les tests: `cd DevOps_proj3_Datashare/frontend && npm run test:run`
 - Couverture: `cd DevOps_proj3_Datashare/frontend && npm run test:cov`
 
+### E2E UI (Cypress)
+Pré-requis: backend + frontend démarrés.
+
+- Backend: `cd DevOps_proj3_Datashare/backend && npm run start:dev`
+- Frontend: `cd DevOps_proj3_Datashare/frontend && npm run dev`
+- Exécution headless: `cd DevOps_proj3_Datashare/frontend && npm run e2e`
+- Runner interactif: `cd DevOps_proj3_Datashare/frontend && npm run e2e:open`
+
 ### Frontend (smoke manuel)
 - `cd DevOps_proj3_Datashare/frontend && npm run dev`
 
@@ -32,6 +40,7 @@ Documenter le plan de tests (MVP) et fournir une base de tests automatisés (bac
 Plans détaillés (CSV):
 - Backend: `test_plan_backend.csv`
 - Frontend: `test_plan_frontend.csv`
+- E2E: `test_plan_e2e.csv`
 
 ### Backend
 
@@ -103,6 +112,37 @@ Plans détaillés (CSV):
 		- `src/pages/RegisterPage.tsx`: 75.64% lines
 - Ajouter une capture d’écran du rapport de couverture dans `livrables/`.
 
+# E2E UI (Cypress)
+- Dernière exécution (2026-02-23): `cd DevOps_proj3_Datashare/frontend && npm run e2e`
+	- Statut: OK (run ci-dessous: 4 specs, 4 tests)
+	- Environnement: Cypress 15.10.0 / Electron 138 (headless) / Node v22.22.0
+	- Specs (suite actuelle): `cypress/e2e/auth_myspace.cy.ts`, `cypress/e2e/upload_access.cy.ts`, `cypress/e2e/login.cy.ts`, `cypress/e2e/download.cy.ts`
+	- Résumé: 4 passing, 0 failing, durée totale ~6s
+	- Log (extrait):
+
+```text
+$ npm run e2e
+
+> frontend@0.0.0 e2e
+> cypress run
+
+Specs:          4 found (auth_myspace.cy.ts, download.cy.ts, login.cy.ts, upload_access.cy.ts)
+
+E2E - Auth -> MySpace
+  ✓ register via API then login via UI
+
+E2E - Download
+	✓ downloads a public file and returns expected content
+
+E2E - Login
+	✓ shows an error on invalid credentials
+
+E2E - Upload -> Accéder -> Download
+  ✓ uploads a file and opens the public download page
+
+✔  All specs passed!                        00:06        4        4        -        -        -
+```
+
 ## Fichiers de tests automatisés (backend)
 Ces tests sont exécutés via Jest (`npm test` / `npm run test:cov`).
 
@@ -128,3 +168,11 @@ Ces tests sont exécutés via Vitest (`npm run test:run` / `npm run test:cov`).
 - `frontend/src/pages/DownloadPage.test.tsx`
 - `frontend/src/pages/LandingPage.test.tsx`
 - `frontend/src/pages/MySpacePage.test.tsx`
+
+## Fichiers de tests automatisés (e2e UI — Cypress)
+Ces tests sont exécutés via Cypress (`npm run e2e` / `npm run e2e:open`).
+
+- `frontend/cypress/e2e/auth_myspace.cy.ts`
+- `frontend/cypress/e2e/upload_access.cy.ts`
+- `frontend/cypress/e2e/login.cy.ts`
+- `frontend/cypress/e2e/download.cy.ts`

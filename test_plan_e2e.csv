@@ -1,0 +1,22 @@
+ID;Fonctionnalité;Type;Cible;Préconditions;Étapes;Résultat attendu;Priorité;Automatisé
+E2E-HEALTH-01;Healthcheck OK;E2E;GET /health;Backend démarré;Appeler /health;200 + body.ok présent;P1;Oui
+E2E-AUTH-01;Register + Login + Me;E2E;POST /api/auth/register + /api/auth/login + GET /api/auth/me;DB dispo + email unique;Register puis Login puis appeler /me avec Bearer;201 puis 200 + accessToken puis 200 + id/email;P1;Oui
+E2E-AUTH-02;Accès protégé sans JWT;E2E;GET /api/files;Aucun token;Appeler /api/files;401;P1;Oui
+E2E-FILES-01;Upload non protégé + liste;E2E;POST /api/files/upload + GET /api/files?status=active;JWT valide;Uploader un petit fichier texte puis lister actifs;201 (id, token, expiresAt) puis item présent status=ACTIVE;P1;Partiel
+E2E-FILES-02;Upload protégé + meta;E2E;POST /api/files/upload + GET /download/:token/meta;JWT valide;Uploader avec password puis lire meta;meta: isProtected=true + originalName/size/expiresAt;P1;Partiel
+E2E-DL-01;Download public non protégé;E2E;GET /download/:token;Token d’un fichier non protégé;GET /download/:token;200 + headers download + contenu identique;P1;Partiel
+E2E-DL-02;Download protégé sans mot de passe;E2E;GET /download/:token;Token d’un fichier protégé;GET /download/:token;401;P1;Partiel
+E2E-DL-03;Download protégé mauvais mot de passe;E2E;POST /download/:token;Token protégé;POST {password: faux};401;P1;Partiel
+E2E-DL-04;Download protégé OK;E2E;POST /download/:token;Token protégé + bon mot de passe;POST {password: bon};200 + stream + contenu identique;P1;Partiel
+E2E-DL-05;Token inconnu/invalide;E2E;GET /download/:token/meta;Aucun;Appeler meta avec token aléatoire + token non-UUID;404;P1;Oui
+E2E-DEL-01;Suppression + lien devient indisponible;E2E;DELETE /api/files/:id + GET /download/:token/meta;JWT propriétaire + fichier existant;DELETE puis appeler meta/download;204 puis 410 (supprimé);P1;Partiel
+E2E-HIST-01;Filtres historique (active/expired/deleted);E2E;GET /api/files?status=...;Au moins 1 fichier actif + 1 supprimé (+ 1 expiré si injecté);Appeler status=active/deleted/expired;Chaque liste ne contient que les statuts demandés;P2;Partiel
+E2E-EXP-01;Expiration (via DB);E2E;GET /download/:token + GET /api/files?status=expired;Accès DB test (mettre expires_at dans le passé);Forcer expiration en DB puis appeler download + list expired;410 côté download + item dans status=expired;P2;Non
+E2E-UI-01;UI: parcours login -> Mon espace;E2E;Frontend (Cypress);Backend+Frontend démarrés;Créer un compte via l’API, ouvrir /login, se connecter, vérifier redirection /my-space;Page Mon espace affichée (liste OU EmptyState) + appels API OK;P1;Oui
+E2E-UI-02;UI: upload -> lien public affiché;E2E;Frontend (navigateur);User connecté;Uploader un fichier via l’UI;Item apparaît avec lien /download/:token;P1;Non
+E2E-UI-03;UI: ouverture lien public sans auth;E2E;Frontend (navigateur);Avoir un lien /download/:token;Ouvrir lien dans fenêtre privée;Meta visible + téléchargement possible si non protégé;P1;Non
+E2E-UI-04;UI: lien protégé demande mot de passe;E2E;Frontend (navigateur);Avoir upload protégé;Ouvrir /download/:token, saisir mdp faux puis bon;Erreur puis téléchargement;P1;Non
+E2E-UI-05;UI: suppression + filtre supprimés;E2E;Frontend (navigateur);Avoir un fichier actif;Supprimer via UI puis passer filtre Supprimés;Item présent dans Supprimés;P2;Non
+E2E-UI-06;UI: upload -> accéder -> page téléchargement;E2E;Frontend (Cypress);Backend+Frontend démarrés;Créer un compte via l’API, login UI, upload fichier .txt, cliquer Accéder;Page /download/:token affiche meta + bouton Télécharger;P1;Oui
+E2E-UI-07;UI: login KO (mauvais mot de passe);E2E;Frontend (Cypress);Backend+Frontend démarrés;Créer un compte via l’API, tenter Connexion avec mauvais mot de passe;Message d’erreur affiché + rester sur /login;P1;Oui
+E2E-UI-08;UI: download public (contenu);E2E;Frontend (Cypress);Backend+Frontend démarrés;Créer un compte via l’API, upload fichier .txt, appeler GET /api/download/:token;200 + headers attachment + body contient le contenu uploadé;P1;Oui
