@@ -64,3 +64,25 @@ Exécution / réseau
 |---|---|---:|---:|---:|---:|---|
 | 2026-02-23 | GET /download/:token/meta | 10 | 30s | 13.32ms | 0% | OK (200 + JSON, stable) |
 | 2026-02-23 | GET /download/:token | 10 | 30s | 13.32ms | 0% | OK (200, stable) |
+
+## Pistes d’évolution (amélioration des tests perf)
+
+### 1) Rendre le test k6 “actionnable” (thresholds + profils de charge)
+- Ajouter des thresholds k6 (ex: `http_req_failed < 0.01`, `p(95) < 200ms`) pour transformer le test en **critère de non-régression**.
+- Tester plusieurs profils de charge (ramp-up/ramp-down, pics de trafic, plus de VUs) et conserver les sorties (logs k6) en livrable.
+- Tester des tailles de fichiers réalistes (petit vs moyen vs proche limite) et vérifier l’impact sur débit/latence.
+
+### 2) Couvrir plus de scénarios sur l’endpoint download
+- Ajouter un scénario “lien protégé” (password correct/incorrect) pour mesurer le coût bcrypt + taux d’erreur attendu (401).
+- Ajouter un scénario “lien expiré/supprimé/invalide” (410/404) pour vérifier stabilité et latence des erreurs.
+
+### 3) Mesures serveur (corrélation logs → ressources)
+- Corréler `durationMs` avec des métriques système pendant le run (CPU/RAM/IO disque) pour détecter les goulots (ex: saturation RAM si upload en mémoire, IO sur `uploads/`).
+- Ajouter une extraction simple des logs JSON (p95 côté serveur, top endpoints lents) pour compléter les stats k6.
+
+### 4) Budget de performance côté front (évolution)
+- Définir un budget “page download” mesuré en navigateur (ex: LCP, INP, TTFB, taille JS, temps de rendu) via Lighthouse/DevTools et conserver une capture.
+- Mesurer les timings réseau (TTFB, download) en conditions réalistes (cache vide, réseau limité) pour lier UX ↔ perf API.
+
+### 5) Automatisation (CI)
+- Ajouter une exécution k6 optionnelle en CI (ou en nightly) avec export JSON/HTML et comparaison à une baseline.

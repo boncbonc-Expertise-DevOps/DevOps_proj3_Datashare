@@ -7,6 +7,8 @@
 * Auth : `Authorization: Bearer <JWT>`
 * Dates : ISO-8601 (UTC)
 
+> Note dev : le frontend (Vite) utilise un proxy `/api` → `http://localhost:3000`.
+
 ## Authentification
 
 ### POST `/api/auth/register`
@@ -26,7 +28,7 @@ Crée un compte.
 
 ```json
 {
-  "id": "uuid-or-int",
+  "id": 1,
   "email": "serge@mail.com"
 }
 ```
@@ -86,15 +88,23 @@ Upload d’un fichier + options.
 
 **Response 201 (JSON)**
 
+> Le backend renvoie un objet `{ status, file, message }`.
+
 ```json
 {
-  "id": "uuid-or-int",
-  "token": "UhGyr",
-  "downloadUrl": "/download/UhGyr",
-  "originalName": "IMG\_9210.jpg",
-  "sizeBytes": 2600000,
-  "expiresAt": "2026-02-18T12:00:00Z",
-  "isProtected": false
+  "status": "success",
+  "file": {
+    "id": 10,
+    "originalName": "hello.txt",
+    "mimeType": "text/plain",
+    "size": 123,
+    "storagePath": ".../backend/uploads/1700000000000_hello.txt",
+    "downloadToken": "5aa7275c-1c5c-4c02-aa54-61308c508f6f",
+    "expiresAt": "2026-02-18T12:00:00Z",
+    "createdAt": "2026-02-11T12:00:00Z",
+    "passwordProtected": false
+  },
+  "message": "Fichier uploadé avec succès."
 }
 ```
 
@@ -121,15 +131,15 @@ Liste « Mon espace ».
 {
   "items": \[
     {
-      "id": "uuid-or-int",
+      "id": 10,
       "originalName": "IMG\_9210.jpg",
       "sizeBytes": 2600000,
       "createdAt": "2026-02-11T12:00:00Z",
       "expiresAt": "2026-02-18T12:00:00Z",
       "isProtected": true,
       "status": "ACTIVE",
-      "token": "UhGyr",
-      "downloadUrl": "/download/UhGyr"
+      "token": "5aa7275c-1c5c-4c02-aa54-61308c508f6f",
+      "downloadUrl": "/download/5aa7275c-1c5c-4c02-aa54-61308c508f6f"
     }
   ],
   "page": 1,
@@ -174,7 +184,7 @@ Métadonnées publiques (affichage avant téléchargement).
 
 ```json
 {
-  "token": "UhGyr",
+  "token": "5aa7275c-1c5c-4c02-aa54-61308c508f6f",
   "originalName": "IMG_9210.jpg",
   "mimeType": "image/jpeg",
   "sizeBytes": 2600000,
@@ -198,6 +208,7 @@ Téléchargement public.
 **Réponses**
 
 * `200` stream du fichier (Content-Disposition: attachment)
+* `401` mot de passe requis (si fichier protégé)
 * `404` token invalide
 * `410` fichier expiré
 
