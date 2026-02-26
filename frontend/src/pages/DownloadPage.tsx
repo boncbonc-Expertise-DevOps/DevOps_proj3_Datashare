@@ -45,6 +45,20 @@ function friendlyErrorMessage(err: unknown) {
   return msg || "Erreur lors du chargement.";
 }
 
+async function extractErrorMessage(res: Response) {
+  try {
+    const ct = res.headers.get("content-type") || "";
+    if (ct.includes("application/json")) {
+      const data: any = await res.json();
+      return (data && (data.message || data.error)) || `HTTP ${res.status}`;
+    }
+    const text = await res.text();
+    return text || `HTTP ${res.status}`;
+  } catch {
+    return `HTTP ${res.status}`;
+  }
+}
+
 export function DownloadPage() {
   const navigate = useNavigate();
   const { token } = useParams();
@@ -122,6 +136,12 @@ export function DownloadPage() {
   async function handleProtectedDownload(e: React.FormEvent) {
     e.preventDefault();
     if (!downloadUrl) return;
+
+    if (!password || password.trim().length < 6) {
+      setDownloadError("Mot de passe requis.");
+      return;
+    }
+
     setDownloadError(null);
     setDownloading(true);
 
@@ -133,22 +153,20 @@ export function DownloadPage() {
       });
 
       if (!res.ok) {
-        let msg = `HTTP ${res.status}`;
-        try {
-          const data = await res.json();
-          msg = data?.message || msg;
-        } catch {}
-
+        const msg = await extractErrorMessage(res);
         const lower = String(msg).toLowerCase();
-        if (res.status === 401 && lower.includes("mot de passe")) {
+
+        if (res.status === 400 && (lower.includes("mot de passe") || lower.includes("password"))) {
+          throw new Error("Mot de passe requis.");
+        }
+
+        // Sur les liens protégés, l'API renvoie typiquement 401/403 si le mot de passe est mauvais.
+        if (res.status === 401 || res.status === 403) {
           throw new Error("Mot de passe incorrect.");
         }
-        if (res.status === 410) {
-          throw new Error("Lien expiré ou fichier supprimé.");
-        }
-        if (res.status === 404) {
-          throw new Error("Lien invalide.");
-        }
+
+        if (res.status === 410) throw new Error("Lien expiré ou fichier supprimé.");
+        if (res.status === 404) throw new Error("Lien invalide.");
         throw new Error(String(msg));
       }
 
@@ -240,15 +258,16 @@ export function DownloadPage() {
                   type="password"
                   placeholder="6 caractères minimum"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  minLength={6}
-                  required
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (downloadError) setDownloadError(null);
+                  }}
                 />
               </div>
 
               {downloadError && <div className="ds-error">{downloadError}</div>}
 
-              <button className="ds-primary" type="submit" disabled={!canSubmitProtected || downloading}>
+              <button className="ds-primary" type="submit" disabled={downloading}>
                 {downloading ? "Téléchargement..." : "Télécharger"}
               </button>
             </form>

@@ -155,13 +155,14 @@ E2E UI (Cypress):
 
 ## 📦 Version
 
-version: **v2.0.0**
-Release date: 22-02-2026
+version: **v2.1.0**
+Release date: 26-02-2026
 Status: Stable
-Comment: Implémentation complète US02 (Téléchargement via lien) backend et frontend.
-MVP finalisé
+Comment: Fixes frontend dans certaines transitions de pages Register/login/Myspace/Upload et affichage des erreurs sur mot de passe fichier (download)
 
 ### History
+version: **v2.0.0** (22-02-2026) — MVP finalisé
+
 version: **v1.3.0** (22-02-2026) — US06 (Effacer fichiers)
 
 version: **v1.2.0** (22-02-2026) — US05 (Liste fichiers / historique)

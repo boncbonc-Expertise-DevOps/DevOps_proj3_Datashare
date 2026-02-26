@@ -147,18 +147,45 @@ describe("DownloadPage", () => {
     const passwordInput = screen.getByPlaceholderText("6 caractères minimum") as HTMLInputElement;
     const submit = screen.getByRole("button", { name: "Télécharger" });
 
-    expect(submit).toBeDisabled();
-    await user.type(passwordInput, "12345");
-    expect(submit).toBeDisabled();
-
-    await user.clear(passwordInput);
     await user.type(passwordInput, "123456");
-    expect(submit).toBeEnabled();
 
     await user.click(submit);
 
     expect(await screen.findByText("Mot de passe incorrect.")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("protected download shows an error when password is missing/too short", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockImplementationOnce(async () => okJson({
+        token: "t555",
+        originalName: "protected.zip",
+        mimeType: "application/zip",
+        sizeBytes: 12,
+        expiresAt: "2030-01-01T10:00:00.000Z",
+        isProtected: true,
+      }) as any);
+
+    globalThis.fetch = fetchMock as any;
+
+    renderWithRouter(
+      <Routes>
+        <Route path="/download/:token" element={<DownloadPage />} />
+      </Routes>,
+      { route: "/download/t555" },
+    );
+
+    expect(await screen.findByText("protected.zip")).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    const passwordInput = screen.getByPlaceholderText("6 caractères minimum") as HTMLInputElement;
+    await user.type(passwordInput, "123");
+
+    await user.click(screen.getByRole("button", { name: "Télécharger" }));
+
+    expect(await screen.findByText("Mot de passe requis.")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("protected download success triggers a browser download", async () => {
