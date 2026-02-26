@@ -6,7 +6,7 @@ export function LoginPage({
   onLoggedIn,
 }: {
   goRegister: () => void;
-  onLoggedIn: () => void;
+  onLoggedIn: () => Promise<void>;
 }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,7 +19,7 @@ export function LoginPage({
     setLoading(true);
     try {
       await login({ email, password });
-      onLoggedIn();
+      await onLoggedIn();
     } catch (err: any) {
       setError(err.message || "Erreur login");
     } finally {

@@ -23,16 +23,16 @@ Ports par défaut:
 Option A — via Docker (recommandé):
 
 ```bash
-docker run --name datashare-db \
-    -e POSTGRES_USER=datashare \
-    -e POSTGRES_PASSWORD=datashare \
-    -e POSTGRES_DB=datashare \
+docker run --name datashare-db-demo \
+    -e POSTGRES_USER=demo \
+    -e POSTGRES_PASSWORD=demo \
+    -e POSTGRES_DB=datashare_db_demo \
     -p 5432:5432 \
     -d postgres:16
 ```
 
 Option B — PostgreSQL local:
-- Créer une DB `datashare` et un user (ou adapter les variables d’env).
+- Créer une DB `datashare_db_demo` et un user `demo` (ou adapter les variables d’env).
 
 ### 2) Schéma DB (migration SQL)
 Le schéma est défini ici: `backend/migrations/001_init.sql`.
@@ -40,7 +40,7 @@ Le schéma est défini ici: `backend/migrations/001_init.sql`.
 Appliquer la migration (exemple avec `psql`):
 
 ```bash
-psql -h localhost -p 5432 -U datashare -d datashare -f backend/migrations/001_init.sql
+psql -h localhost -p 5432 -U demo -d datashare_db_demo -f backend/migrations/001_init.sql
 ```
 
 ### 3) Installation des dépendances
@@ -65,9 +65,9 @@ Créer `backend/.env` (exemple):
 ```env
 DB_HOST=localhost
 DB_PORT=5432
-DB_USER=datashare
-DB_PASSWORD=datashare
-DB_NAME=datashare
+DB_USER=demo
+DB_PASSWORD=demo
+DB_NAME=datashare_db_demo
 
 JWT_SECRET=CleSuperSecreteAchanger
 ```

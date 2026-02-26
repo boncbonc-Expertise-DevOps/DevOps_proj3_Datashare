@@ -28,8 +28,12 @@ describe("E2E - Auth -> MySpace", () => {
       expect(i.response?.statusCode, JSON.stringify(i.response?.body)).to.eq(200);
     });
 
-    // Wait for the MySpace shell/layout to render.
-    cy.get(".ds-myspace-layout", { timeout: 20000 }).should("be.visible");
+    // Wait for either the list shell (sidebar) OR the empty full-page screen.
+    cy.get("body", { timeout: 20000 }).should(($body) => {
+      const hasShell = $body.find(".ds-myspace-layout").length > 0;
+      const hasEmptyFull = $body.find(".ds-myspace-empty-full").length > 0;
+      expect(hasShell || hasEmptyFull).to.eq(true);
+    });
 
     // If the page still doesn't show the expected UI, surface a helpful message.
     cy.get("body").should(($body) => {
@@ -41,15 +45,8 @@ describe("E2E - Auth -> MySpace", () => {
 
     cy.contains("button", "Déconnexion", { timeout: 20000 }).should("be.visible");
 
-    // Depending on the DB state, the page can show either the list view (with an h1)
-    // or the EmptyState (no h1, but a prompt + upload CTA). Use should() for retry.
-    cy.get("body", { timeout: 20000 }).should(($body) => {
-      const hasListTitle =
-        $body.find("h1").filter((_, el) => el.textContent?.includes("Mes fichiers")).length > 0;
-      const hasEmptyPrompt = $body.text().includes("Tu veux partager un fichier ?");
-      expect(hasListTitle || hasEmptyPrompt).to.eq(true);
-    });
-
-    cy.contains("Mes fichiers").should("be.visible");
+    // Nouvel utilisateur (créé dans ce test) : aucun fichier => empty-state attendu.
+    cy.contains("Tu veux partager un fichier ?", { timeout: 20000 }).should("be.visible");
+    cy.get('[aria-label="Ajouter des fichiers"]', { timeout: 20000 }).should("be.visible");
   });
 });

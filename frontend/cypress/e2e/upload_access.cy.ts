@@ -28,7 +28,7 @@ describe("E2E - Upload -> Accéder -> Download", () => {
       expect(i.response?.statusCode, JSON.stringify(i.response?.body)).to.be.oneOf([200, 304]);
     });
 
-    cy.get(".ds-myspace-topbar").contains("button", "Ajouter des fichiers").click();
+    cy.openUploadFromMySpace();
     cy.contains("h2", "Ajouter des fichiers").should("be.visible");
 
     cy.get("#ds-upload-file").selectFile("cypress/fixtures/hello.txt", { force: true });
@@ -42,10 +42,13 @@ describe("E2E - Upload -> Accéder -> Download", () => {
     });
 
     // Go back to list and refresh deterministically
-    cy.get(".ds-myspace-nav").contains("button", "Mes fichiers").click();
-    cy.wait("@files", { timeout: 20000 }).then((i) => {
-      expect(i.response?.statusCode, JSON.stringify(i.response?.body)).to.be.oneOf([200, 304]);
+    cy.wait("@files", { timeout: 20000 });
+    cy.get("body", { timeout: 20000 }).then(($body) => {
+      if ($body.find(".ds-myspace-nav").length) {
+        cy.get(".ds-myspace-nav").contains("button", "Mes fichiers").click({ force: true });
+      }
     });
+    cy.wait("@files", { timeout: 20000 });
 
     cy.contains(".ds-file-row", "hello.txt", { timeout: 20000 }).within(() => {
       cy.contains("button", "Accéder").click();

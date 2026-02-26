@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { register } from "../api";
+import { useNavigate } from "react-router-dom";
+import { apiMe, login, register } from "../api";
 
 export function RegisterPage({ goLogin }: { goLogin: () => void }) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
@@ -20,7 +22,10 @@ export function RegisterPage({ goLogin }: { goLogin: () => void }) {
     setLoading(true);
     try {
       await register({ email, password });
-      goLogin(); // redirection vers login
+      // Auto-login puis redirection vers /myspace
+      await login({ email, password });
+      await apiMe();
+      navigate("/myspace", { replace: true });
     } catch (err: any) {
       setError(err.message || "Erreur lors de l'inscription");
     } finally {

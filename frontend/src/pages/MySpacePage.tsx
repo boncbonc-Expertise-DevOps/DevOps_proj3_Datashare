@@ -191,6 +191,20 @@ export function MySpacePage({ onLogout }: { onLogout: () => void }) {
     return <MySpaceShell onLogout={onLogout} onGoFiles={handleGoFiles}><ErrorState message={uploadError ?? "Erreur"} onBack={goBackToMySpace} /></MySpaceShell>;
   }
 
+  // Si l'utilisateur n'a aucun fichier, afficher l'écran empty-space plein écran
+  // (sans sidebar), pour une meilleure transition post-login/register.
+  if (view === "list" && showEmptySpace) {
+    return (
+      <MySpaceEmptyFullPage
+        onLogout={onLogout}
+        onGoUpload={() => {
+          resetUploadState();
+          setView("upload");
+        }}
+      />
+    );
+  }
+
   if (view === "upload") {
     return (
       <MySpaceShell onLogout={onLogout} onGoFiles={handleGoFiles}>
@@ -297,30 +311,46 @@ export function MySpacePage({ onLogout }: { onLogout: () => void }) {
         setView("upload");
       }}
     >
-      {showEmptySpace ? (
-        <EmptyState
-          onGoUpload={() => {
-            resetUploadState();
-            setView("upload");
-          }}
-        />
-      ) : (
-        <FilesList
-          items={items}
-          filter={filter}
-          onFilterChange={(f) => {
-            setHasTouchedFilter(true);
-            setFilter(f);
-          }}
-          onDelete={handleDelete}
-          deletingId={deletingId}
-          onGoUpload={() => {
-            resetUploadState();
-            setView("upload");
-          }}
-        />
-      )}
+      <FilesList
+        items={items}
+        filter={filter}
+        onFilterChange={(f) => {
+          setHasTouchedFilter(true);
+          setFilter(f);
+        }}
+        onDelete={handleDelete}
+        deletingId={deletingId}
+        onGoUpload={() => {
+          resetUploadState();
+          setView("upload");
+        }}
+      />
     </MySpaceShell>
+  );
+}
+
+function MySpaceEmptyFullPage({
+  onLogout,
+  onGoUpload,
+}: {
+  onLogout: () => void;
+  onGoUpload: () => void;
+}) {
+  return (
+    <div className="ds-myspace-empty-full">
+      <header className="ds-header">
+        <div className="ds-brand">DataShare</div>
+        <button className="ds-cta" type="button" onClick={onLogout}>
+          Déconnexion
+        </button>
+      </header>
+
+      <div className="ds-myspace-empty-full-center">
+        <EmptyState onGoUpload={onGoUpload} />
+      </div>
+
+      <footer className="ds-footer">Copyright DataShare® 2025</footer>
+    </div>
   );
 }
 

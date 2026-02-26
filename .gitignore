@@ -53,6 +53,10 @@ Thumbs.db
 postgres-data/
 docker-data/
 
+# Uploads runtime (ne pas versionner les fichiers déposés)
+backend/uploads/*
+!backend/uploads/README.md
+
 # ----------------------
 # NestJS specific
 # ----------------------

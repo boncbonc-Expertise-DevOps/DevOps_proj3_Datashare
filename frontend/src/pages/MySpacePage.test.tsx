@@ -72,10 +72,10 @@ describe("MySpacePage", () => {
     renderWithRouter(<MySpacePage onLogout={() => undefined} />);
 
     expect(await screen.findByText(/Tu veux partager un fichier/i)).toBeInTheDocument();
-    // In EmptyState we have two "Ajouter des fichiers" buttons:
-    // - topbar CTA (text)
-    // - floating icon button (aria-label)
-    expect(screen.getByText("Ajouter des fichiers")).toBeInTheDocument();
+    // Sur l'écran empty-space plein écran, l'action est le bouton rond (aria-label)
+    // et il n'y a pas de CTA texte "Ajouter des fichiers" en header.
+    expect(screen.getByText("Déconnexion")).toBeInTheDocument();
+    expect(screen.queryByText("Ajouter des fichiers")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Ajouter des fichiers")).toBeInTheDocument();
   });
 

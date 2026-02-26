@@ -27,7 +27,7 @@ describe("E2E - Download", () => {
       expect(i.response?.statusCode, JSON.stringify(i.response?.body)).to.be.oneOf([200, 304]);
     });
 
-    cy.get(".ds-myspace-topbar").contains("button", "Ajouter des fichiers").click();
+    cy.openUploadFromMySpace();
     cy.contains("h2", "Ajouter des fichiers").should("be.visible");
 
     cy.get("#ds-upload-file").selectFile("cypress/fixtures/hello.txt", { force: true });
@@ -39,6 +39,10 @@ describe("E2E - Download", () => {
       expect(token).to.match(/^[0-9a-fA-F-]{36}$/);
       cy.wrap(token).as("token");
     });
+
+    // Attendu produit : après upload OK, retour sur MySpace (liste) avec le fichier visible.
+    cy.wait("@files", { timeout: 20000 });
+    cy.contains(".ds-file-row", "hello.txt", { timeout: 20000 }).should("be.visible");
 
     cy.get<string>("@token").then((token) => {
       cy.request({
