@@ -41,6 +41,7 @@ describe("DownloadPage", () => {
 
   beforeEach(() => {
     vi.restoreAllMocks();
+    localStorage.clear();
   });
 
   afterEach(() => {
@@ -81,6 +82,41 @@ describe("DownloadPage", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(String(fetchMock.mock.calls[0][0])).toContain("/api/download/t123/meta");
+  });
+
+  it("Retour navigates to /myspace when logged in", async () => {
+    localStorage.setItem("accessToken", "fake-token");
+
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes("/meta")) {
+        return okJson({
+          token: "t123",
+          originalName: "file.txt",
+          mimeType: "text/plain",
+          sizeBytes: 10,
+          expiresAt: "2030-01-01T10:00:00.000Z",
+          isProtected: false,
+        }) as any;
+      }
+      throw new Error(`Unexpected fetch url: ${url}`);
+    });
+    globalThis.fetch = fetchMock as any;
+
+    renderWithRouter(
+      <Routes>
+        <Route path="/" element={<div>HOME</div>} />
+        <Route path="/myspace" element={<div>MYSPACE</div>} />
+        <Route path="/download/:token" element={<DownloadPage />} />
+      </Routes>,
+      { route: "/download/t123" },
+    );
+
+    expect(await screen.findByText("file.txt")).toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Retour" }));
+    expect(await screen.findByText("MYSPACE")).toBeInTheDocument();
   });
 
   it("protected download shows password form and handles wrong password", async () => {

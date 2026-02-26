@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { getToken } from "../api";
 
 type DownloadMeta = {
   token: string;
@@ -47,6 +48,10 @@ function friendlyErrorMessage(err: unknown) {
 export function DownloadPage() {
   const navigate = useNavigate();
   const { token } = useParams();
+
+  function handleBack() {
+    navigate(getToken() ? "/myspace" : "/");
+  }
 
   const [meta, setMeta] = useState<DownloadMeta | null>(null);
   const [loading, setLoading] = useState(true);
@@ -174,7 +179,7 @@ export function DownloadPage() {
       {!loading && error && (
         <div>
           <div className="ds-error">{error}</div>
-          <button className="ds-link" onClick={() => navigate("/")}>Retour</button>
+          <button className="ds-link" onClick={handleBack}>Retour</button>
         </div>
       )}
 
@@ -249,7 +254,7 @@ export function DownloadPage() {
             </form>
           )}
 
-          <button className="ds-link" onClick={() => navigate("/")}>Retour</button>
+          <button className="ds-link" onClick={handleBack}>Retour</button>
         </div>
       )}
     </div>
