@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
+import { diskStorage } from 'multer';
 import * as path from 'path';
+import * as fs from 'fs';
+import { randomUUID } from 'crypto';
 import { FileController } from './file.controller';
 import { DownloadController } from './download.controller';
 import { ApiDownloadController } from './api-download.controller';
@@ -22,6 +24,10 @@ const FORBIDDEN_EXTENSIONS = [
   '.cpl',
 ];
 
+// Stream upload vers disque : <backend>/uploads (résout correctement en dev/prod)
+const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+const MAX_FILES_PER_USER = 10;
+
 @Module({
   imports: [
     DbModule,
@@ -29,7 +35,20 @@ const FORBIDDEN_EXTENSIONS = [
       imports: [DbModule],
       inject: [DbService],
       useFactory: (db: DbService) => ({
-        storage: memoryStorage(),
+        storage: diskStorage({
+          destination: (req, _file, cb) => {
+            try {
+              if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+              cb(null, UPLOAD_DIR);
+            } catch (e) {
+              cb(e as any, UPLOAD_DIR);
+            }
+          },
+          filename: (_req, file, cb) => {
+            const ext = path.extname(path.basename(file.originalname)).toLowerCase();
+            cb(null, `${randomUUID()}${ext}`);
+          },
+        }),
         limits: { fileSize: MAX_FILE_SIZE },
         fileFilter: (req, file, cb) => {
           // Objectif: rejeter avant que le controller ne voie le fichier
@@ -50,20 +69,30 @@ const FORBIDDEN_EXTENSIONS = [
             return cb(null, false);
           }
 
-          db.query(
-            'SELECT 1 FROM files WHERE user_id = $1 AND original_name = $2 AND expires_at > NOW() AND deleted_at IS NULL LIMIT 1',
-            [userId, file.originalname],
-          )
-            .then((res) => {
-              if (res.rowCount && res.rowCount > 0) {
+          // Validations DB avant écriture disque (évite d'écrire un fichier qu'on rejettera ensuite)
+          Promise.all([
+            db.query('SELECT COUNT(*) FROM files WHERE user_id = $1 AND expires_at > NOW() AND deleted_at IS NULL', [userId]),
+            db.query(
+              'SELECT 1 FROM files WHERE user_id = $1 AND original_name = $2 AND expires_at > NOW() AND deleted_at IS NULL LIMIT 1',
+              [userId, file.originalname],
+            ),
+          ])
+            .then(([countRes, dupRes]) => {
+              const count = Number.parseInt(String(countRes.rows?.[0]?.count ?? '0'), 10);
+              if (Number.isFinite(count) && count >= MAX_FILES_PER_USER) {
+                (req as any).fileValidationError = 'Quota de fichiers atteint (10 max)';
+                return cb(null, false);
+              }
+
+              if (dupRes.rowCount && dupRes.rowCount > 0) {
                 (req as any).fileValidationError = 'Ce fichier a déjà été uploadé';
                 return cb(null, false);
               }
+
               return cb(null, true);
             })
             .catch(() => {
-              (req as any).fileValidationError =
-                'Erreur de validation du fichier';
+              (req as any).fileValidationError = 'Erreur de validation du fichier';
               return cb(null, false);
             });
         },

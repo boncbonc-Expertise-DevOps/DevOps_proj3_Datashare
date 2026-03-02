@@ -261,39 +261,55 @@ export class FileService {
   }) {
     const { userId, file, body } = params;
 
-    await this.validateFile(file, userId);
-
-    const expiresAt = this.computeExpiresAt(body);
-    const passwordHash = await this.computePasswordHash(body?.password);
-
     // Avec Multer diskStorage, le fichier est déjà sur disque : file.path est fourni.
-    const storagePath = await this.saveFileToDisk(file);
-    const downloadToken = this.generateDownloadToken();
+    // On fait des validations défensives puis, en cas d'erreur métier/DB, on nettoie le fichier.
+    const anyFile: any = file as any;
+    const diskPath = typeof anyFile.path === 'string' ? (anyFile.path as string) : undefined;
 
-    const saved = await this.saveFileMetadata({
-      userId,
-      file,
-      storagePath,
-      downloadToken,
-      expiresAt,
-      passwordHash,
-    });
+    try {
+      await this.validateFile(file, userId);
 
-    return {
-      status: 'success',
-      file: {
-        id: saved.id,
-        originalName: file.originalname,
-        mimeType: file.mimetype,
-        size: file.size,
+      const expiresAt = this.computeExpiresAt(body);
+      const passwordHash = await this.computePasswordHash(body?.password);
+
+      const storagePath = await this.saveFileToDisk(file);
+      const downloadToken = this.generateDownloadToken();
+
+      const saved = await this.saveFileMetadata({
+        userId,
+        file,
         storagePath,
         downloadToken,
         expiresAt,
-        createdAt: saved.createdAt,
-        passwordProtected: !!passwordHash,
-      },
-      message: 'Fichier uploadé avec succès.',
-    };
+        passwordHash,
+      });
+
+      return {
+        status: 'success',
+        file: {
+          id: saved.id,
+          originalName: file.originalname,
+          mimeType: file.mimetype,
+          size: file.size,
+          storagePath,
+          downloadToken,
+          expiresAt,
+          createdAt: saved.createdAt,
+          passwordProtected: !!passwordHash,
+        },
+        message: 'Fichier uploadé avec succès.',
+      };
+    } catch (e) {
+      // Best-effort cleanup: si Multer a déjà écrit le fichier, on évite les orphelins sur erreur.
+      if (diskPath) {
+        try {
+          if (fs.existsSync(diskPath)) fs.unlinkSync(diskPath);
+        } catch {
+          // ignore cleanup errors
+        }
+      }
+      throw e;
+    }
   }
 
   async validateFile(file: Express.Multer.File, userId: number) {
@@ -303,9 +319,19 @@ export class FileService {
     if (!ext) throw new BadRequestException('Fichier sans extension interdit');
     if (FORBIDDEN_EXTENSIONS.includes(ext)) throw new BadRequestException('Type de fichier interdit');
 
+    // Défense en profondeur : le fileFilter (Multer) rejette déjà avant écriture disque,
+    // mais on revalide côté service pour éviter les courses (quota/doublon) et garder la compat.
+    if (!userId) throw new BadRequestException('Utilisateur non authentifié');
+
     // 10 fichiers max par user (actifs)
-    const count = await this.db.query('SELECT COUNT(*) FROM files WHERE user_id = $1 AND expires_at > NOW() AND deleted_at IS NULL', [userId]);
-    if (parseInt(count.rows[0].count, 10) >= MAX_FILES_PER_USER) throw new BadRequestException('Quota de fichiers atteint (10 max)');
+    const countRes = await this.db.query(
+      'SELECT COUNT(*) FROM files WHERE user_id = $1 AND expires_at > NOW() AND deleted_at IS NULL',
+      [userId],
+    );
+    const count = Number.parseInt(String(countRes.rows?.[0]?.count ?? '0'), 10);
+    if (Number.isFinite(count) && count >= MAX_FILES_PER_USER) {
+      throw new BadRequestException('Quota de fichiers atteint (10 max)');
+    }
 
     // Interdit d'uploader un fichier déjà uploadé (même nom) et encore actif
     const duplicate = await this.db.query(

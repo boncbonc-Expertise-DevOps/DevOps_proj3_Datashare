@@ -155,12 +155,14 @@ E2E UI (Cypress):
 
 ## 📦 Version
 
-version: **v2.1.1**
+version: **v2.2.0**
 Release date: 02-03-2026
 Status: Stable
-Comment: Amélioriation contraste après analyse lighthouse 
+Comment: Passage de la config Multer de memoryStorage() à diskStorage() pour l'upload fichier 
 
 ### History
+version: **v2.1.1** (02-03-2026) — Amélioriation contraste après analyse lighthouse
+
 version: **v2.1.1** (02-03-2026) — Ajout documentation OpenApi (Swagger) coté backend 
 
 version: **v2.1.0** (26-02-2026) — Fixes frontend dans certaines transitions de pages Register/login/Myspace/Upload et affichage des erreurs sur mot de passe fichier (download)
