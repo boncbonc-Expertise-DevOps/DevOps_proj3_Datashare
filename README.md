@@ -155,12 +155,14 @@ E2E UI (Cypress):
 
 ## 📦 Version
 
-version: **v2.1.0**
-Release date: 26-02-2026
+version: **v2.1.1**
+Release date: 02-03-2026
 Status: Stable
-Comment: Fixes frontend dans certaines transitions de pages Register/login/Myspace/Upload et affichage des erreurs sur mot de passe fichier (download)
+Comment: Ajout documentation OpenApi (Swagger) coté backend 
 
 ### History
+version: **v2.1.0** (26-02-2026) _ Fixes frontend dans certaines transitions de pages Register/login/Myspace/Upload et affichage des erreurs sur mot de passe fichier (download)
+
 version: **v2.0.0** (22-02-2026) — MVP finalisé
 
 version: **v1.3.0** (22-02-2026) — US06 (Effacer fichiers)

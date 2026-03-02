@@ -18,13 +18,17 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { FileService } from './file.service';
 import { ListFilesQueryDto } from './dto/list-files.query.dto';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('files')
+@ApiBearerAuth('bearer')
 @Controller('api/files')
 export class FileController {
   constructor(private readonly fileService: FileService) {}
 
   @Get()
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'List files for current user' })
   async listFiles(@Req() req: any, @Query() query: ListFilesQueryDto) {
     const rawUserId = req.user?.userId;
     const userId = Number(rawUserId);
@@ -36,6 +40,7 @@ export class FileController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @HttpCode(204)
+  @ApiOperation({ summary: 'Delete a user file (soft delete + best-effort disk delete)' })
   async deleteFile(@Req() req: any, @Param('id', ParseIntPipe) id: number) {
     const rawUserId = req.user?.userId;
     const userId = Number(rawUserId);
@@ -47,6 +52,7 @@ export class FileController {
   @Post('upload')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload a file (multipart/form-data)' })
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
     @Req() req: any,

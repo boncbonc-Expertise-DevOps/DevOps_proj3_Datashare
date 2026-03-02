@@ -6,19 +6,23 @@ import type { SignOptions } from "jsonwebtoken";
 import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
 import { JwtAuthGuard } from "./jwt-auth.guard";
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('auth')
 @Controller("api/auth")
 export class AuthController {
   constructor(private auth: AuthService, private jwt: JwtService) {}
 
   // POST /api/auth/register
   @Post("register")
+  @ApiOperation({ summary: 'Register a new user' })
   register(@Body() dto: RegisterDto) {
     return this.auth.register(dto.email, dto.password);
   }
 
   // POST /api/auth/login
   @Post("login")
+  @ApiOperation({ summary: 'Login and get a JWT access token' })
   async login(@Body() dto: LoginDto) {
     const user = await this.auth.validateUser(dto.email, dto.password);
 
@@ -34,6 +38,9 @@ export class AuthController {
 
   @Get("me")
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('bearer')
+  @ApiOperation({ summary: 'Get current authenticated user' })
+  @ApiOkResponse({ description: 'User info from JWT payload' })
     me(@Req() req) {
     return req.user;
   }
