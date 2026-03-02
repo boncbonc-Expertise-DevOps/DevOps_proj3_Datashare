@@ -131,8 +131,6 @@ export function DownloadPage() {
     return () => ac.abort();
   }, [metaUrl]);
 
-  const canSubmitProtected = !!password && password.length >= 6;
-
   async function handleProtectedDownload(e: React.FormEvent) {
     e.preventDefault();
     if (!downloadUrl) return;
