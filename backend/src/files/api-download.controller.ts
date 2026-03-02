@@ -12,18 +12,24 @@ import type { Response } from 'express';
 import * as fs from 'fs';
 import { FileService } from './file.service';
 import { DownloadPasswordDto } from './dto/download-password.dto';
+import { ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('download')
 @Controller('api/download')
 export class ApiDownloadController {
   constructor(private readonly fileService: FileService) {}
 
   @Get(':token/meta')
+  @ApiOperation({ summary: 'Get download metadata (API variant)' })
+  @ApiParam({ name: 'token', description: 'Download token (UUID)' })
   async getMeta(@Param('token') token: string) {
     if (!token) throw new BadRequestException('Token manquant');
     return await this.fileService.getPublicFileMeta({ token });
   }
 
   @Get(':token')
+  @ApiOperation({ summary: 'Download file (API variant)' })
+  @ApiParam({ name: 'token', description: 'Download token (UUID)' })
   async downloadUnprotected(
     @Param('token') token: string,
     @Res({ passthrough: true }) res: Response,
@@ -42,6 +48,9 @@ export class ApiDownloadController {
   }
 
   @Post(':token')
+  @ApiOperation({ summary: 'Download protected file with password (API variant)' })
+  @ApiParam({ name: 'token', description: 'Download token (UUID)' })
+  @ApiBody({ type: DownloadPasswordDto })
   async downloadProtected(
     @Param('token') token: string,
     @Body() body: DownloadPasswordDto,
