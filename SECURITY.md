@@ -1,6 +1,6 @@
 # SECURITY.md — DataShare
 
-Date: 2026-02-23
+Date: 2026-03-03
 
 ## Objectif
 - Avoir un scan de sécurité basique et documenter les décisions (corrigé / accepté / ignoré).
@@ -10,12 +10,14 @@ Date: 2026-02-23
 ### 1) Dépendances (npm audit)
 Backend:
 - `cd DevOps_proj3_Datashare/backend`
-- `npm audit`
+- `npm audit --omit=dev`
+- puis `npm audit`
 - (optionnel) `npm audit fix`
 
 Frontend:
 - `cd DevOps_proj3_Datashare/frontend`
-- `npm audit`
+- `npm audit --omit=dev`
+- puis `npm audit`
 - (optionnel) `npm audit fix`
 
 Notes importantes (interprétation):
@@ -35,6 +37,9 @@ Notes importantes (interprétation):
 ### Auth & validation
 - Auth JWT sur l’upload (et les routes utilisateur) : `Authorization: Bearer <JWT>`.
 - Validation globale Nest (`ValidationPipe`) : whitelist + forbidNonWhitelisted + transform.
+
+### Headers de sécurité
+- Headers HTTP via Helmet (CSP compatible Swagger UI).
 
 ### Upload (US01)
 - Limite de taille : 1 Go (Multer `limits.fileSize` + validation service).
@@ -97,9 +102,8 @@ curl -i -L http://localhost:3000/download/<TOKEN>
 ```
 
 ## TODO sécurité (à faire / à décider)
-- Revoir `memoryStorage` en prod : un upload proche de 1 Go est bufferisé en RAM (risque DoS). Option : streaming vers un fichier temporaire/quarantaine + validations + move atomique.
 - Rate limiting sur endpoints sensibles (login, upload, download) + protection brute-force mot de passe download.
-- Headers de sécurité (Helmet) + CORS explicite (origins autorisées) en dev/prod.
+- CORS explicite (origins autorisées) en dev/prod.
 - Politique “fichiers interdits” plus complète (liste extensions + éventuellement MIME sniffing).
 - Nettoyage automatique des expirations (job/cron) + surveillance du disque.
 
@@ -107,8 +111,8 @@ curl -i -L http://localhost:3000/download/<TOKEN>
 
 | Date | Composant | Outil | Résultat | Action |
 |---|---|---|---|---|
-| 2026-02-23 | backend | npm audit | `npm audit --omit=dev`: 0 vuln. `npm audit`: 36 vuln (5 moderate, 31 high) via outils dev (Nest CLI/schematics, ESLint/TypeScript-ESLint, Jest tooling). | **Accepté (dev-only)**. Ne pas exécuter `npm audit fix --force` (breaking). À revoir via MAJ ciblées des outils. |
-| 2026-02-23 | frontend | npm audit | `npm audit --omit=dev`: 0 vuln. `npm audit`: 14 vuln (1 moderate, 13 high) via outils dev (ESLint/TypeScript-ESLint, Vitest coverage, glob/minimatch) + `ajv` transitoire. | **Accepté (dev-only)**. Option: tenter `npm audit fix` (sans `--force`) puis rerun `npm run lint` + `npm run test:run` + `npm run e2e`. Éviter `npm audit fix --force` (upgrade majeur ESLint). |
+| 2026-03-03 | backend | npm audit | `npm audit --omit=dev`: 0 vuln. `npm audit`: 6 vuln **moderate** (dev-only) via Nest CLI/schematics (ajv). | **Corrigé (prod)** via `npm audit fix` (Multer). **Accepté (dev-only)** pour le reste. Éviter `npm audit fix --force` (breaking). |
+| 2026-03-03 | frontend | npm audit | `npm audit --omit=dev`: 0 vuln. `npm audit`: 0 vuln (après `npm audit fix`). | **Corrigé (dev-only)** via `npm audit fix` (sans `--force`). |
 
 ## Décisions
 - **Corrigé**: vulnérabilités avec correctif non breaking (`npm audit fix`).
