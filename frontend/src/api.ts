@@ -53,6 +53,18 @@ export function getToken() {
   return localStorage.getItem("accessToken");
 }
 
+function handleUnauthorized() {
+  // Redirection uniquement si on était "authentifié" côté client.
+  // Important: ne pas renvoyer vers /login pour des endpoints publics (ex: download) qui peuvent renvoyer 401.
+  const token = getToken();
+  if (!token) return;
+
+  logout();
+  if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+    window.location.assign("/login");
+  }
+}
+
 async function apiJson<T>(path: string, init: RequestInit): Promise<T> {
   const res = await fetch(path, {
     ...init,
@@ -98,6 +110,10 @@ async function apiFetch<T>(url: string, init: RequestInit = {}): Promise<T> {
 
   const res = await fetch(url, { ...init, headers });
 
+  if (res.status === 401 || res.status === 403) {
+    handleUnauthorized();
+  }
+
   if (!res.ok) {
     let msg = `HTTP ${res.status}`;
     try {
@@ -137,6 +153,10 @@ async function apiFormData<T>(url: string, formData: FormData, init: RequestInit
     headers,
     body: formData,
   });
+
+  if (res.status === 401 || res.status === 403) {
+    handleUnauthorized();
+  }
 
   const ct = res.headers.get("content-type") || "";
   const body = ct.includes("application/json") ? await res.json() : await res.text();

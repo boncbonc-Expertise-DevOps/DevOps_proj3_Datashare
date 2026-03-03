@@ -155,12 +155,14 @@ E2E UI (Cypress):
 
 ## 📦 Version
 
-version: **v2.2.0**
-Release date: 02-03-2026
+version: **v2.2.1**
+Release date: 03-03-2026
 Status: Stable
-Comment: Passage de la config Multer de memoryStorage() à diskStorage() pour l'upload fichier 
+Comment: ajout Helmet et un CSP non strict compatible Swagger UI (security Backend) - fix UI frontend en forçant le retour vers /login quand token expiré"  
 
 ### History
+version: **v2.2.0** (02-03-2026) —  Passage de la config Multer de memoryStorage() à diskStorage() pour l'upload fichier
+
 version: **v2.1.1** (02-03-2026) — Amélioriation contraste après analyse lighthouse
 
 version: **v2.1.1** (02-03-2026) — Ajout documentation OpenApi (Swagger) coté backend 

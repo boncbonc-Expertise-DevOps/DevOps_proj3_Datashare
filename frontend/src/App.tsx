@@ -105,7 +105,17 @@ export default function App() {
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   useEffect(() => {
-    if (!getToken()) navigate("/login", { replace: true });
+    const token = getToken();
+    if (!token) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    // Vérifie que le token est toujours valide : si /me échoue, on revient au login.
+    apiMe().catch(() => {
+      logout();
+      navigate("/login", { replace: true });
+    });
   }, [navigate]);
   return <>{children}</>;
 }
