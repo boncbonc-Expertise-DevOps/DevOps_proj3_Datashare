@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-  [string]$EnvFile = ".env.demo.example",
+  [string]$EnvFile = "./livrables/env.demo.example",
   [string]$ProjectName = "datashare_db_demo"
 )
 

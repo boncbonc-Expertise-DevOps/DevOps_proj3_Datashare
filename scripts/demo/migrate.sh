@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ENV_FILE="${ENV_FILE:-.env.demo.example}"
+ENV_FILE="./livrables/.env.demo.example"
 PROJECT_NAME="${PROJECT_NAME:-datashare_db_demo}"
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
